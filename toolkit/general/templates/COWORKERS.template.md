@@ -1,6 +1,6 @@
 # COWORKERS — project entry point
 
-Layout: task-scoped v2. This is an index, not a global current task.
+An index, not a global current task.
 Coordination root: (verified real absolute path; all participating worktrees use it).
 Workflow: `.coworkers/WORKFLOW.md` (read when joining a task, not every request).
 Helper: `.coworkers/tools/coord.py`; usage: `.coworkers/tools/README.md`.
@@ -12,6 +12,15 @@ Shared claims/protections: `.coworkers/state/shared.md` under the coordination r
 - Checks: (verified commands/runbook; listing a check does not mean it passed)
 - Environment and resource namespaces: (runbook + shared-board pointers)
 - Local constraints: (exceptions or pointers; no secrets)
+
+## Roles
+
+- **Planner** — scope, executable plan, acceptance; accepts or replans from evidence.
+- **Executor** — implements and verifies within scope; owns its jobs and scratch.
+- **Reviewer (optional)** — independent check of risky changes or disputed evidence.
+
+Roles attach to tasks, not to the project; one session may fill several. Each task
+board records its participants and next owner. Details: `.coworkers/WORKFLOW.md`.
 
 ## Select, do not load everything
 

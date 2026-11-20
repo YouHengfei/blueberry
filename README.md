@@ -10,8 +10,8 @@ helper—not an agent runtime, installer, scheduler or project-profile collectio
   destructive retirement, acceptance and publication—not before every routine step.
 - **Readable:** a small current snapshot, actionable next step and useful final task
   narrative; append history with the newest entry at the bottom.
-- **Low prompt intrusion:** load a short router, then the selected task and relevant
-  stage/evidence. Do not inject every board, role manual or raw log into every request.
+- **Low contextual aggressiveness:** load a short router, then the selected task and
+  relevant plan/evidence—never every board, role manual or raw log into every request.
 - **Task isolation, shared coordination:** roles belong to tasks, not singleton
   project positions. Share only reservations, dependencies and project pointers.
 - **Local-first:** checkpoint experiments locally; prepare reviewed publication
@@ -28,17 +28,17 @@ human approval → explicit merge → validation. Do not infer permanent rules s
 
 ```mermaid
 flowchart TD
-    U[User intent and approvals] --> R[Small routing prompt]
-    R --> I[Project entry point]
-    I --> T[Selected task state]
-    T --> P[Planner: executable plan]
-    P --> E[Executor: local checkpoints and tests]
-    E --> A{Acceptance}
-    A -->|Revise| P
-    A -->|Accept| C[Task README and approved cleanup]
-    T -. Claims and dependencies .-> S[Shared coordination]
-    C --> K[Durable knowledge]
-    K -. Read when relevant .-> P
+    U[User intent] --> Q{Task clear?}
+    Q -- no --> A[Ask: existing task / new task / discussion]
+    A --> U
+    Q -- yes --> T1[Task lane 1: plan → execute → evidence]
+    Q -- yes --> T2[Task lane 2: parallel session]
+    T1 --> G{Acceptance by Planner / user}
+    T2 --> G
+    G -- revise --> T1
+    G -- accept --> R[Task record + approved cleanup]
+    T1 -. atomic claims .-> S[(Shared coordination)]
+    T2 -. atomic claims .-> S
 ```
 
 ## Layout in an adopting project
@@ -58,8 +58,8 @@ COWORKERS.md                         # Small index and project pointers
 local_tests/<task_id>/<run_id>/      # Disposable output, not permanent knowledge
 ```
 
-No ownership of a project's `docs/` or `notes/` is assumed. Task records have their
-own namespace. Preserve existing evidence paths instead of moving them for aesthetics.
+Adoption claims no existing project directory; records use their own namespace.
+Preserve existing evidence paths instead of moving them for aesthetics.
 Across worktrees, use one canonical coordination root; versioned records belong in
 the task worktree, whose actual path is recorded in its state board.
 
@@ -93,11 +93,42 @@ not a security boundary or a replacement for live availability checks.
 ```text
 Read <blueberry-checkout>/README.md and follow its agent setup procedure.
 Set up blueberry in <target-repository> for the current agent harness.
-Identify source, target, canonical coordination root and harness before writing.
-Preserve existing instructions, boards, running work, reservations and evidence.
+If either path is missing or ambiguous, ask first; never guess or proceed.
+Preserve existing instructions, boards, running work, reservations and evidence,
+including unrelated harness resources such as settings, skills and extensions.
 Ask before conflicts, task creation or migration. Use local copies, not symlinks.
 Do not change global settings, run workloads/cleanup, or commit/push.
 Validate, report created/preserved/skipped items, and explain reload requirements.
+```
+
+## Update an installation
+
+Installed copies change only through this explicit flow; `git pull` never updates them.
+
+```text
+Read <blueberry-checkout>/README.md and update the existing blueberry installation in
+<target-repository> for the current agent harness.
+If a path is missing or ambiguous, or no installation exists, ask first.
+Compare each installed asset with the source; propose an additive merge that preserves
+local modifications, unrelated instructions and other harness resources.
+Layout/board changes require the documented paused-writer migration; never mix a new
+cleaner with an unmigrated live board. Do not run workloads, cleanup or commit/push.
+Report applied, skipped and conflicting changes with required reload steps.
+```
+
+## Uninstall
+
+Removal reverses only installed assets; coordination data and evidence are project history.
+
+```text
+Read <blueberry-checkout>/README.md and remove the blueberry installation from
+<target-repository> for the current agent harness.
+If a path is missing or ambiguous, ask first; inventory installed pieces before deleting.
+Remove only installed instructions, skills, prompts, helper and workflow; revert only
+blueberry-added ignore rules and merge sections. Restore anything ambiguous by asking.
+Preserve COWORKERS.md, .coworkers/ records and state, local_tests and evidence by
+default; deleting them requires explicit approval. Never stop jobs or delete evidence.
+Validate and report removed, preserved and leftover items.
 ```
 
 ## Agent setup procedure
@@ -126,8 +157,12 @@ the helper. Do not promise distributed/network-filesystem locking guarantees.
 ### 3. Create or preserve
 
 - Copy by default; never follow symlink destinations or parents when writing.
-  Existing identical assets need no change. Differing instructions/skills require
-  a proposed minimal merge and approval. No competing instruction entry points.
+  Existing identical assets need no change. For differing instruction entry points,
+  propose an additive, clearly marked merge that preserves every existing line; ask
+  before reordering or removing anything. No competing instruction entry points.
+- Treat unrelated harness resources (settings, extensions, prompts, skills, context
+  files) as preserved context: inspect them, report collisions, never remove or
+  override them to make room for blueberry.
 - If absent and approved, copy the project index and shared-board templates, workflow
   guide and helper directory. Populate only verified context/root/namespace pointers.
   Do not invent task owners, resource availability, tests or example active claims.

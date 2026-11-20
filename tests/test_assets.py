@@ -23,7 +23,7 @@ spec.loader.exec_module(coord)
 class AssetTests(unittest.TestCase):
     def test_router_budget_and_not_a_second_board(self):
         text = (GENERAL / "system-prompts/project.md").read_text()
-        self.assertLessEqual(len(text.split()), 250)
+        self.assertLessEqual(len(text.split()), 160)
         self.assertIn("selected task", text)
         self.assertIn("discussion-only", text)
         self.assertNotIn("| Resource |", text)
@@ -39,6 +39,25 @@ class AssetTests(unittest.TestCase):
             self.assertIn(field, task)
         self.assertIn("15 handoffs / 20 decisions", task)
         self.assertIn("from the top", task)
+
+    def test_index_defines_roles_and_avoids_noise(self):
+        index = (GENERAL / "templates/COWORKERS.template.md").read_text()
+        self.assertLessEqual(len(index.splitlines()), 60)
+        for role in ("**Planner**", "**Executor**", "**Reviewer (optional)**"):
+            self.assertIn(role, index)
+        for noise in ("v2", "docs/` or `notes/"):
+            self.assertNotIn(noise, index)
+
+    def test_readme_prompts_guard_missing_paths_and_cover_update_uninstall(self):
+        readme = (ROOT / "README.md").read_text()
+        self.assertIn("Low contextual aggressiveness", readme)
+        self.assertNotIn("Low prompt intrusion", readme)
+        self.assertNotIn("No ownership of a project's", readme)
+        self.assertIn("flowchart TD", readme)
+        self.assertIn("parallel session", readme)
+        for section in ("Update an installation", "Uninstall"):
+            self.assertIn(f"## {section}", readme)
+        self.assertEqual(readme.count("is missing or ambiguous"), 3, "setup/update/uninstall prompts must ask first")
 
     def test_explicit_skill_metadata_and_new_cleanup_policy(self):
         for path in (GENERAL / "skills").glob("*/SKILL.md"):

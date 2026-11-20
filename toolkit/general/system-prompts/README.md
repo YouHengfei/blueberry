@@ -3,7 +3,7 @@
 [project.md](project.md) is a small, harness-neutral instruction fragment. It
 points to the project-local `COWORKERS.md` and selected task. It contains no project
 profile, resource inventory, detailed role manual or task content. The current
-static budget is <=250 whitespace-delimited words; this is not a token measurement.
+static budget is <=160 whitespace-delimited words; this is not a token measurement.
 
 The [agent setup procedure](../../../README.md#agent-setup-procedure) copies or
 merges it into the harness's supported instruction entry point after checking

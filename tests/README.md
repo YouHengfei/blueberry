@@ -21,7 +21,7 @@ Git configuration. Test subprocesses are the only processes these tests terminat
 - Malformed state fails closed; generic updates cannot edit claims.
 - Path restrictions, symlink/hardlink guards, bounded input and pre/post-replace I/O
   failures (post-replace errors need a fresh snapshot, not an assumption of rollback).
-- Generic template links/frontmatter, a <=250-word static router budget, and a copied
+- Generic template links/frontmatter, a <=160-word static router budget, and a copied
   helper/template round trip in a disposable project (not automated agent setup).
 - Disposable ordinary/linked Git worktrees: resolved info/exclude, selective ignores,
   versionable task records and one canonical shared reservation root.
@@ -65,7 +65,7 @@ read traces/usage data; do not invent hidden prompt sizes. Measure separately:
 4. Task/role selection errors, unnecessary clarification and unsafe action attempts.
 5. Resume/compaction and handoff correctness, plus human readability of the snapshot.
 
-The <=250 whitespace-word router check is a static size budget, not a token claim.
+The <=160 whitespace-word router check is a static size budget, not a token claim.
 Do not confuse prompt caching discounts with removing unrelated context. Include
 both first-request and continuing-session measurements; tool reads can persist.
 

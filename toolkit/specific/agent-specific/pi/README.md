@@ -20,6 +20,11 @@ live board before its approved migration; source updates do not require a live r
 
 - Copy by default. Inspect inherited instructions/resources and preserve existing
   boards. Never replace `.pi/SYSTEM.md` or an existing context file with the router.
+  For a differing entry point, propose an additive, clearly marked merge that keeps
+  every existing line; ask before reordering or removing anything.
+- Do not touch unrelated `.pi/` resources: settings, extensions, prompts, skills and
+  context files are preserved; report collisions and precedence risks instead of
+  removing or overriding them.
 - A trusted project's `.pi/APPEND_SYSTEM.md` takes precedence over agent-dir
   `APPEND_SYSTEM.md`; they are not combined. Inspect inherited content before creating
   one and ask how to preserve instructions it would hide. The same precedence applies

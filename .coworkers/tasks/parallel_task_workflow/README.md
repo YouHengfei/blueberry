@@ -52,7 +52,7 @@ PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -v
 
 | Check | Result | Limits |
 |---|---|---|
-| Isolated unittest suite | 41 passed, 0 failures, 0 skips | Local POSIX host, Python 3.13.13 |
+- Validation and reproduction | 41 passed, 0 failures, 0 skips | Local POSIX host, Python 3.13.13 |
 | Competing processes | One winner for conflicting claims / stale board revisions | Cooperative writers only |
 | Crash and I/O behavior | Lock releases; reservations persist; post-replace errors require reread | Not distributed durability testing |
 | Git fixtures | Ordinary and linked worktrees, selective exclusions and canonical claims pass | Temporary repos only |
@@ -63,6 +63,33 @@ PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -v
 An intermediate fixture failure assumed `git init --template=` creates `info/exclude`;
 the fixture now explicitly seeds local rules, and setup documents creating an absent
 exclude file/parent. This was a test-fixture correction, not a live Git change.
+
+## Review fixes (2026-11-20, same day)
+
+User review of the pushed commit `3a0e713` reported six problems, all fixed on top of
+it (uncommitted at the time of this update):
+
+1. Setup/update/uninstall prompts now require asking when `<blueberry-checkout>` or
+   `<target-repository>` is missing or ambiguous; update and uninstall prompt sections
+   were added with preserve-first semantics (additive merges; coordination data and
+   evidence are never removed by default).
+2. Index template defines Planner/Executor/Reviewer roles directly (roles attach to
+   tasks, not the project) with a pointer to the workflow for details.
+3. Router shortened 203 → 148 words / 1,506 → 1,072 bytes; static budget tightened
+   to <=160 words. Setup must merge additively and preserve unrelated harness resources
+   (settings, extensions, prompts, skills, context files) — including Pi's rule that a
+   project `.pi/APPEND_SYSTEM.md` overrides the agent-dir file.
+4. Philosophy bullet renamed to “Low contextual aggressiveness”.
+5. Diagram simplified; human acceptance gates and two parallel task lanes are explicit.
+6. Noise removed: “Layout: task-scoped v2.” and the defensive docs/notes sentence.
+
+New validation: 43 tests pass (two added for role visibility, noise removal, and the
+three ask-first prompt blocks); router 148 words; Python 3.10 grammar and whitespace
+checks pass. The blueberry-local `.pi/` test installation was refreshed to the current
+router; its prompt/skill copies were already byte-identical to unchanged sources.
+
+- Updated source fingerprint: `49625e6b40671f9f1d051a29a80f87839c8618790e87baf61ef900a94aa5510c`
+  (same 24-file recipe, this record excluded).
 
 ## Evidence and cleanup
 

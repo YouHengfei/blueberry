@@ -1,23 +1,20 @@
 # Task-local collaboration
 
 For project work, read repository-root `COWORKERS.md`, then only the selected task
-state and relevant plan/evidence. Follow its canonical coordination-root pointer
-across worktrees. Do not load every task, stage, or log. General questions need no task.
+state and its current plan or evidence—never every task, stage or log. General
+questions need no task.
 
-An explicit task wins; otherwise retain this session's clearly matching task. If
-uncertain, offer relevant existing tasks, a proposed snake_case task, or discussion-only.
-Confirm ambiguous creation/joining. Never select by latest update or a global current-task
-file. After uncertain resume/compaction, re-establish the task and refresh its state.
+An explicit task wins; otherwise keep this session's clearly matching task. If
+uncertain, offer relevant existing tasks, a proposed snake_case task, or
+discussion-only, and confirm before creating or joining. Never pick the most
+recently updated task. After an ambiguous resume, re-establish the task.
 
-Read the referenced workflow when joining; identify your role/session without taking
-over another owner. Before shared-resource work or cleanup, refresh shared claims and
-protections and verify live availability. Use the coordination helper for revision-checked
-board edits and atomic claims; on conflict reread and merge, never overwrite or steal.
+Joining: read the referenced workflow, confirm role and session, never take over
+another owner. Before shared-resource work or cleanup, refresh shared claims and
+verify live availability; use the coordination helper for edits and claims; on
+conflict reread and merge—never overwrite.
 
-At meaningful request boundaries reconcile state, next action, plan validity, evidence
-and reservations; write only changes. Append new history at the bottom. Keep detailed
-records outside the prompt and scratch output separate from durable task knowledge.
-
-Cleanup and publication require explicit authorization. Missing, legacy or conflicting
-setup: report it and offer initialization/migration; never reset it silently or migrate
-while other sessions are writing. Do not change persistent workflow rules without approval.
+After meaningful requests, reconcile state, next action, evidence and reservations;
+write only changes; append history at the bottom. Cleanup, publication and
+workflow-rule changes need explicit authorization. Missing or legacy setup: report
+and ask—never reset.
