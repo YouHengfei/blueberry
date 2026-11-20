@@ -1,8 +1,13 @@
-# Agent-specific assets
+# Agent harness notes
 
-Use this directory for assets tied to a specific coding agent profile.
+Read these alongside the [setup procedure](../../../README.md#agent-setup-procedure).
+They map generic assets to a harness; they do not install anything or define
+another workflow.
 
-Examples:
+- [pi/](pi/README.md): Pi 1.5.x instruction precedence, local skill loading,
+  and reload/verification steps.
 
-- `pi_system_prompt.md`
-- `pi_workflow.md`
+For another harness, inspect its official documentation before deployment.
+Document supported paths, instruction precedence, explicit skill invocation,
+conflict handling, and reload behavior. Shared `SKILL.md` syntax does not imply
+identical discovery paths or support for every frontmatter field.

@@ -1,0 +1,12 @@
+{
+  "name": "blueberry",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lightweight, agent-first infrastructure workflow assets; optional Pi skills package",
+  "keywords": ["pi-package"],
+  "pi": {
+    "skills": [
+      "toolkit/general/skills"
+    ]
+  }
+}

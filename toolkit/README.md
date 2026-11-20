@@ -1,37 +1,24 @@
-# Private Agentic Toolkit
+# Toolkit map
 
-This directory helps you manage reusable prompts, skills, and workflow notes in a clean split between global and repository-local assets.
+Start with the [agent setup procedure](../README.md#agent-setup-procedure).
+Sources are project-neutral; live state, project rules and evidence stay in their
+owning projects. Default deployment is explicit local copies, not an installer.
 
-## Structure
+| Source | Destination in an adopting project | Purpose |
+|---|---|---|
+| [general/system-prompts/project.md](general/system-prompts/project.md) | Harness instruction entry point (merge) | Small selective task router |
+| [general/WORKFLOW.md](general/WORKFLOW.md) | `.coworkers/WORKFLOW.md` | On-demand workflow and user guide |
+| [general/templates/COWORKERS.template.md](general/templates/COWORKERS.template.md) | `COWORKERS.md` | Small project index; copy once |
+| [general/templates/SHARED.template.md](general/templates/SHARED.template.md) | `.coworkers/state/shared.md` | Canonical claims/protections; copy once |
+| [general/templates/TASK.template.md](general/templates/TASK.template.md) | `.coworkers/state/tasks/<task_id>.md` | Selected task's mutable state |
+| [general/templates/TASK_README.template.md](general/templates/TASK_README.template.md) | `.coworkers/tasks/<task_id>/README.md` | Durable record, progressively completed |
+| [general/templates/STAGE.template.md](general/templates/STAGE.template.md) | `.coworkers/tasks/<task_id>/stages/NN_short_description.md` | Optional detailed plan/findings |
+| [general/tools/](general/tools/) | `.coworkers/tools/` | Cooperative state/claim helper and usage |
+| [general/templates/local_tests-policy.md](general/templates/local_tests-policy.md) | Adopt in project policy only if useful | Scratch lifecycle |
+| [general/templates/SKILL.template.md](general/templates/SKILL.template.md) | Authoring only | Explicit skill skeleton |
+| [general/skills/](general/skills/) | Harness skill location | Selected explicit procedures |
+| [specific/agent-specific/](specific/agent-specific/) | Read relevant adapter, do not inject | Verified loading notes and optional prompts |
 
-```text
-toolkit/
-├── general/
-│   └── README.md
-└── specific/
-    ├── README.md
-    ├── agent-specific/
-    │   └── README.md
-    └── repo-specific/
-        └── README.md
-```
-
-## What to place where
-
-- `general/`
-  - cross-repository system prompts
-  - reusable skill definitions
-  - common runbooks/checklists
-- `specific/`
-  - `repo-specific/`: prompts tied to this repository only, repo workflows, local constraints
-  - `agent-specific/`: prompts and workflows for individual coding agents (for example, `pi`)
-
-## Management advice
-
-1. Keep one concept per file (for example: one skill, one prompt, one runbook).
-2. Use clear file names, such as:
-   - `general/system_prompt_default.md`
-   - `specific/repo-specific/system_prompt_blueberry.md`
-   - `specific/agent-specific/pi_system_prompt.md`
-3. Add a short changelog section at the bottom of each file when the behavior changes.
-4. Avoid storing secrets directly in files; reference secure secret stores instead.
+Existing boards and instructions are preserved first. Do not migrate active writers
+or upgrade only the cleaner on a legacy layout. No vendor profiles, machine paths,
+credentials, live boards or experiment outputs belong in this toolkit.

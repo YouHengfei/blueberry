@@ -1,14 +1,7 @@
-# Repository-specific assets
+# Harness-specific guidance
 
-Use this directory for assets that should only apply to this repository. Split assets by category:
+Only harness mechanics belong here—not project profiles or machine facts.
 
-- `repo-specific/`: repository-only system prompts, workflows, and constraints
-- `agent-specific/`: prompts/workflows for a specific coding agent profile (for example, `pi`)
-
-Recommended naming:
-
-- `repo-specific/repo_prompt_*.md`
-- `repo-specific/workflow_*.md`
-- `repo-specific/constraints_*.md`
-- `agent-specific/<agent_name>_system_prompt.md`
-- `agent-specific/<agent_name>_workflow.md`
+[agent-specific/](agent-specific/) documents instruction entry points, skill
+loading, and verification. Keep workflow content in `toolkit/general/` and
+project-specific rules in the project adopting the toolkit.
