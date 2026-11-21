@@ -70,7 +70,8 @@ class AssetTests(unittest.TestCase):
         for required in ("Default to this session's confirmed task", "Bottom is latest",
                          "Registries are never FIFO", "15 handoffs / 20 decisions",
                          "from the top", "legacy", "AFTER acquiring", "closed-task",
-                         "Never delete `.coworkers/tasks/`", ">10 GB"):
+                         "Never delete `.coworkers/tasks/`", ">10 GB",
+                         "auto-delete", "limits never trigger deletion"):
             self.assertIn(required, cleaner)
         self.assertNotIn("Sort newest first", cleaner)
 

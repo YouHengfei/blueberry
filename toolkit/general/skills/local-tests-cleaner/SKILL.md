@@ -1,14 +1,15 @@
 ---
 name: local-tests-cleaner
-description: Explicit task-scoped scratch cleanup and bottom-latest board compaction; project-wide only when requested. Preserve active work, shared dependencies, durable task records and accepted evidence.
+description: Explicit task-scoped scratch cleanup with aggressive auto-delete of low-risk disposable classes and bottom-latest board compaction; approval gates for registered, shared, cross-task and large deletions. Preserve durable task records and accepted evidence.
 disable-model-invocation: true
 ---
 
 # Local tests / task board cleaner
 
 Run only when explicitly invoked. Default to this session's confirmed task; if
-ambiguous ask which task, or whether project-wide cleanup is intended. No automatic
-cleanup at task completion or retention limits. Missing/legacy layout: stop and
+ambiguous ask which task, or whether project-wide cleanup is intended. At task
+closure the low-risk disposable classes in step 2 are auto-deleted and reported;
+retention limits never trigger deletion. Missing/legacy layout: stop and
 request setup/migration; never deploy this procedure over a live single-board workflow.
 
 ## Procedure
@@ -18,15 +19,19 @@ request setup/migration; never deploy this procedure over a live single-board wo
    Do not load every board, raw log/audio, or recursively explore result trees.
    Project-wide work requires explicit scope and the relevant active AND closed-task
    registries; unresolved consumers mean keep. Missing `local_tests/`: board-only
-   work, do not create it. Missing summaries: skip, do not reconstruct experiments.
-2. **Protect and approve.** Prepare one keep/promote/delete/defer disposition. Prefer
-   retiring disposable probes, failed scratch, duplicate outputs and superseded raw
-   logs after conclusions (metrics/config/code revision) exist in durable records.
-   Preserve active/uncertain ownership, registered artifacts, accepted evidence,
-   shared baselines, Markdown summaries/archives and cross-task dependencies.
-   Registered retirement needs explicit user approval. Deletions >10 GB or of
-   unknown total size need explicit approval; measure only candidate sizes as needed.
-   Promotion to maintained project files is a proposal, not authorized by this skill.
+   work, do not create it. Missing summaries outside the selected task: skip, do
+   not reconstruct experiments.
+2. **Classify and dispose.** Within the selected task's scratch scope, auto-delete
+   and report: unregistered one-off scripts/probes; this task's unregistered,
+   unsummarized failed/empty run directories; empty directories; duplicate and
+   superseded raw logs/outputs whose conclusions (metrics/config/code revision)
+   already exist in summaries or durable records. Explicit approval remains
+   required for: registered artifacts (retirement), accepted evidence and shared
+   baselines, cross-task consumers, anything outside the task scope, and deletions
+   >10 GB or of unknown total size (measure only candidate sizes as needed).
+   Preserve active/uncertain ownership, Markdown summaries/archives and durable
+   records. Promotion to maintained project files is a proposal, not authorized
+   by this skill.
 3. **Recheck, clean, record.** Acquire the relevant workspace scratch-scope and
    task-record write-scope reservations atomically through the helper before deletion;
    if busy or namespace/ownership is unclear, skip. Producers and dependency registrants

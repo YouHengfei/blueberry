@@ -46,7 +46,7 @@ update metadata in place. Cross-task consumers also register in shared.md before
 
 - Acceptance: (Planner/user verdict; failures and exceptions explicit)
 - Task README: (problem, solution, results, revisions, reproduction, evidence)
-- Cleanup: (keep/promote/delete/defer disposition + user approval or exceptions)
+- Cleanup: (auto-deleted disposable classes reported; approval-gated retirements; exceptions)
 - Reservations: (owned jobs stopped and claims released; never others' jobs)
 - Publication: local only; push requires separate authorization.
 

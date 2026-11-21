@@ -156,12 +156,14 @@ revisions, validation table, reproduction, evidence manifest, limitations and cl
 Failed/unchanged checks and absent tests remain visible. Mark removed raw artifacts as
 removed, explaining remaining verification limits; do not imply dangling paths still exist.
 
-Task-scoped cleanup is the default, explicitly requested. Review one batch of candidates:
-keep accepted evidence, promote maintained tests/tools, delete disposable scripts/failed
-scratch/duplicates/superseded raw outputs, defer uncertain or cross-task dependencies.
-A registered artifact needs explicit retirement approval. Preserve useful negative findings
-before deleting their raw outputs. Missing summaries are skipped, not reconstructed by a
-cleaner. Neither limits nor task completion authorize silent bulk deletion.
+Task-scoped cleanup is the default, explicitly requested. Within the selected task's
+scratch scope it auto-deletes and reports the low-risk classes: unregistered one-off
+probes, this task's unregistered unsummarized failed/empty run dirs, empty directories,
+and superseded raw outputs whose conclusions are already captured. Approval gates
+remain for registered retirement, accepted evidence and shared baselines, cross-task
+consumers, >10 GB/unknown-size deletions and anything outside the task scope. Missing
+summaries of other tasks are skipped, not reconstructed. Retention limits never
+trigger deletion.
 
 Project-wide cleanup requires a separate explicit request and review of relevant task
 registries (including closed tasks with retained evidence) and shared protections. Do not
