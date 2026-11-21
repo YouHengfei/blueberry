@@ -6,6 +6,12 @@ Run from the blueberry checkout with Python 3.10+ (POSIX for locking):
 PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -v
 ```
 
+The context-footprint measurement harness lives in
+[experiments/context-footprint](../experiments/context-footprint/README.md): Tier A
+(scripted mock model, zero cost, against the real Pi binary) is runnable and passing;
+Tier B (real models) requires explicit spending authorization. The matrix below is the
+full scenario set; Tier A mechanically covers the assembly rows, not model judgment.
+
 No third-party test dependency, model API, device, container, real workload, live
 project board or retained artifact is needed. Writes are confined to automatically
 removed temporary directories. Git integration tests create commits/worktrees only
@@ -32,16 +38,17 @@ POSIX tests are skipped on unsupported platforms. A cross-device guard unit test
 not validate network filesystem locking. Observe the actual reported pass/skip count;
 never describe skipped or unexecuted coverage as a pass.
 
-## Future context-footprint experiment
+## Context-footprint experiment matrix
 
 This is an explicit experiment protocol, not completed compatibility evidence. Use
 synthetic tasks with unique detail markers and no private project content. Compare
 baseline and blueberry under the same harness version, model/config and session history.
 Record source revision/dirty patch identity, adapter version, model and scenario inputs.
+Tier A (assembly) is measured; rows marked *behavioral* still need Tier B with a real model.
 
 | Scenario | Expected reading / behavior |
 |---|---|
-| General explanation | No new task or unrelated board loading |
+| General explanation *(A)* | No new task or unrelated board loading |
 | Ambiguous task | Index titles allowed; offer matching tasks/new ID/discussion-only |
 | Explicit task A | A state and relevant plan; no B detail marker |
 | Stage transition | Current stage; previous evidence only when relevant, not all stages |
