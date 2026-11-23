@@ -12,7 +12,8 @@ Scale detail to risk; include enough to execute and recognize a wrong result.
 2. Verified prerequisites, environment and required resource scopes.
 3. Ordered steps with concrete commands/procedures and safe stopping points.
 4. Allowed code/config changes; prohibited changes and cost/resource limits.
-5. Checks, expected observations and acceptance thresholds.
+5. Planner-owned acceptance check (before `ready`): command, prerequisites, expected
+   results, negative cases and baseline evidence/limitation; exploration uses experiment + evidence.
 6. Evidence paths, required metrics and reproduction metadata.
 7. Stop/replan conditions, failure reporting and cleanup expectations.
 

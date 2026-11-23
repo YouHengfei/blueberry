@@ -40,6 +40,16 @@ ordered steps, allowed changes/resources, checks and thresholds, evidence, stop
 conditions and cleanup expectations. Write for an Executor without hidden context;
 be specific, not unnecessarily verbose. A small task needs no separate stage file.
 
+Before marking a coding task `ready`, Planner supplies an existing test command or
+new tests for critical behavior and negative cases, with prerequisites and expected
+results. Where practical, confirm they fail for the intended reason on the broken
+baseline; otherwise note the limitation. For exploration, specify a bounded experiment
+and required evidence instead.
+
+Executor runs the checks, adds regressions and reports deviations; it must not weaken
+acceptance checks without Planner approval. Planner reviews the diff, test validity
+and evidence. Passing tests alone does not establish acceptance.
+
 Executor confirms prerequisites, implements/tests within scope, records actual
 code/config/environment and results, and manages its jobs and scratch. Unexpected
 conditions that invalidate the plan require a stop/replan, not silent scope expansion.

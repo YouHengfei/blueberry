@@ -40,6 +40,20 @@ class AssetTests(unittest.TestCase):
         self.assertIn("15 handoffs / 20 decisions", task)
         self.assertIn("from the top", task)
 
+    def test_planner_owned_acceptance_before_ready(self):
+        workflow = (GENERAL / "WORKFLOW.md").read_text()
+        for rule in ("Before marking a coding task `ready`", "existing test command",
+                     "negative cases", "fail for the intended reason",
+                     "must not weaken", "Passing tests alone",
+                     "bounded experiment"):
+            self.assertIn(rule, workflow)
+        for name in ("TASK", "STAGE"):
+            text = (GENERAL / f"templates/{name}.template.md").read_text()
+            self.assertIn("Planner-owned acceptance check", text)
+            self.assertIn("before `ready`", text)
+        index = (GENERAL / "templates/COWORKERS.template.md").read_text()
+        self.assertIn("acceptance checks before handoff", index)
+
     def test_index_defines_roles_and_avoids_noise(self):
         index = (GENERAL / "templates/COWORKERS.template.md").read_text()
         self.assertLessEqual(len(index.splitlines()), 60)

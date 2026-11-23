@@ -15,7 +15,7 @@ Shared claims/protections: `.coworkers/state/shared.md` under the coordination r
 
 ## Roles
 
-- **Planner** — scope, executable plan, acceptance; accepts or replans from evidence.
+- **Planner** — scope, executable plan, acceptance checks before handoff; reviews tests/diff and accepts or replans from evidence.
 - **Executor** — implements and verifies within scope; owns its jobs and scratch.
 - **Reviewer (optional)** — independent check of risky changes or disputed evidence.
 

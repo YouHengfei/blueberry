@@ -18,6 +18,8 @@
 
 - Non-goals and allowed write scope: (intended scope is not an active claim)
 - Acceptance: (observable checks, thresholds, approved exceptions)
+- Planner-owned acceptance check (before `ready`): (plan link or command + expected result;
+  include negative cases; see WORKFLOW.md §2)
 - Dependencies: (other task/asset pointers; register cross-task uses in shared.md)
 
 ## Open questions
