@@ -198,7 +198,13 @@ to the project:
 ## Legacy board migration
 
 Migrating an older single-board installation into task-scoped `.coworkers/` boards is a
-separate, human-approved operation requiring a paused-writer window and a recovery backup
-outside disposable scratch. Follow
-[WORKFLOW.md §9](toolkit/general/WORKFLOW.md#9-migrate-an-existing-board) before updating
-prompts or cleanup skills on that project.
+separate, human-approved operation—never a side effect of setup or update:
+
+1. Agree a paused-writer window (confirm no active producer/cleaner uses changing paths);
+   if work cannot pause, defer migration and keep existing installed assets untouched.
+2. Save a recovery backup outside disposable scratch; split shared protections/claims and
+   task state without losing attribution, binding constraints, timestamps or evidence paths.
+3. Convert newest-first history into bottom-latest order once (preserving same-time order
+   and date-only uncertainty; never fabricate timestamps or move raw artifacts).
+4. Publish canonical pointers/namespaces, merge updated prompts and skills together,
+   verify links and `info/exclude`, and reload/rebind every session before resuming writers.

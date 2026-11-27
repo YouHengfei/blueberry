@@ -29,7 +29,8 @@ Git configuration. Test subprocesses are the only processes these tests terminat
 - Path restrictions, symlink/hardlink guards, bounded input and pre/post-replace I/O
   failures (post-replace errors need a fresh snapshot, not an assumption of rollback).
 - Generic template links/frontmatter, unified [INSTALL.md](../INSTALL.md) and Pi /
-  Antigravity adapter contracts, a <=160-word static router budget, and a copied
+  Antigravity adapter contracts, static word budgets across the router (<=110 words),
+  `WORKFLOW.md` (<=550 words), templates, helper guide and cleaner skill, and a copied
   helper/template round trip in a disposable project (not automated agent setup).
 - Disposable ordinary/linked Git worktrees: resolved info/exclude, selective ignores
   (preserving `.coworkers/tasks/` and unrelated `.agents/` files), versionable task
@@ -75,7 +76,8 @@ read traces/usage data; do not invent hidden prompt sizes. Measure separately:
 4. Task/role selection errors, unnecessary clarification and unsafe action attempts.
 5. Resume/compaction and handoff correctness, plus human readability of the snapshot.
 
-The <=160 whitespace-word router check is a static size budget, not a token claim.
+The <=110 whitespace-word router check (and per-asset word caps) are static size budgets,
+not token claims.
 Do not confuse prompt caching discounts with removing unrelated context. Include
 both first-request and continuing-session measurements; tool reads can persist.
 

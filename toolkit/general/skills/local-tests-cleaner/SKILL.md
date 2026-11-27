@@ -6,61 +6,43 @@ disable-model-invocation: true
 
 # Local tests / task board cleaner
 
-Run only when explicitly invoked. Default to this session's confirmed task; if
-ambiguous ask which task, or whether project-wide cleanup is intended. At task
-closure the low-risk disposable classes in step 2 are auto-deleted and reported;
-retention limits never trigger deletion. Missing/legacy layout: stop and
-request setup/migration; never deploy this procedure over a live single-board workflow.
+Run only when explicitly invoked. Default to this session's confirmed task; if ambiguous,
+ask which task or whether project-wide cleanup is intended. Retention limits never trigger deletion.
+Missing or legacy layout: stop and request setup/migration; never run over an unmigrated
+single-board workflow.
 
 ## Procedure
 
-1. **Scope and inventory.** Read the project entry point and selected task state,
-   relevant registry/record, shared protections and a shallow candidate inventory.
-   Do not load every board, raw log/audio, or recursively explore result trees.
-   Project-wide work requires explicit scope and the relevant active AND closed-task
-   registries; unresolved consumers mean keep. Missing `local_tests/`: board-only
-   work, do not create it. Missing summaries outside the selected task: skip, do
-   not reconstruct experiments.
-2. **Classify and dispose.** Within the selected task's scratch scope, auto-delete
-   and report: unregistered one-off scripts/probes; this task's unregistered,
-   unsummarized failed/empty run directories; empty directories; duplicate and
-   superseded raw logs/outputs whose conclusions (metrics/config/code revision)
-   already exist in summaries or durable records. Explicit approval remains
-   required for: registered artifacts (retirement), accepted evidence and shared
-   baselines, cross-task consumers, anything outside the task scope, and deletions
-   >10 GB or of unknown total size (measure only candidate sizes as needed).
-   Preserve active/uncertain ownership, Markdown summaries/archives and durable
-   records. Promotion to maintained project files is a proposal, not authorized
-   by this skill.
-3. **Recheck, clean, record.** Acquire the relevant workspace scratch-scope and
-   task-record write-scope reservations atomically through the helper before deletion;
-   if busy or namespace/ownership is unclear, skip. Producers and dependency registrants
-   must use the same scratch scope; record writers use its file scope. Refresh
-   shared protections and candidate ownership AFTER acquiring it and after any user
-   approval wait. Do not hold an OS lock while waiting or deleting. Delete only the
-   approved/confirmed disposable candidates; scope changes require renewed approval.
-   Mark intentionally removed artifacts in the durable task record, without rewriting
-   conclusions. Snapshot the task board afresh, append one timestamped cleanup handoff
-   at the bottom, and remove only oldest excess above **15 handoffs / 20 decisions**
-   from the top. At the limit remove nothing. Before evicting a binding decision,
-   preserve its constraint/rationale/evidence in the current plan or durable record;
-   otherwise keep and report the exception. Use helper revision-checked updates;
-   stale writes must be reread/merged. Release only your cleanup claim after work stops.
+1. **Scope & inventory:** Read `COWORKERS.md`, selected task state, task registry/record,
+   shared protections, and a shallow candidate listing (no deep tree walks or raw logs).
+   Project-wide cleanup requires explicit scope plus active and closed-task registries
+   (unresolved consumers = keep). Missing `local_tests/`: compact board only, do not create
+   it. Skip missing summaries of other tasks—never reconstruct experiments.
+2. **Classify & gate:** Within the selected task's scratch scope, auto-delete and report:
+   unregistered one-off scripts/probes; this task's unregistered unsummarized failed/empty
+   run dirs; empty dirs; duplicate/superseded raw outputs whose conclusions (metrics,
+   config, revision) exist in summaries/records. Require explicit approval for: registered
+   retirement, accepted evidence/shared baselines, cross-task consumers, anything outside
+   task scope, and deletions >10 GB or of unknown size (measure candidates only as needed).
+   Preserve active/uncertain ownership, Markdown summaries, and durable records. Code
+   promotion is a proposal only.
+3. **Claim, clean, record:** Acquire workspace scratch-scope and task-record write-scope
+   claims atomically via `coord.py` (skip if busy/unclear). Refresh shared protections and
+   ownership AFTER acquiring claims and after any approval wait; never hold OS locks while
+   waiting/deleting. Delete only confirmed/approved items (scope changes need renewed
+   approval). Mark intentionally removed artifacts in the durable task record. Snapshot the
+   task board afresh, append one timestamped cleanup handoff at bottom, and compact oldest
+   excess above **15 handoffs / 20 decisions** from the top (preserve binding constraints
+   in plan/record first, else keep and report). Use revision-checked updates; release only
+   your cleanup claim after work stops.
 
-## Writing and safety
+## Safety rails
 
-- Bottom is latest. Append new decisions/handoffs/registry entries; update metadata
-  in place. Use workspace `YYYY-MM-DD HH:MM`; preserve recorded times/ties and delayed
-  event annotations. Never re-sort history or invent timestamps.
-- Registries are never FIFO. Aim for ~15 useful rows by safe consolidation or approved
-  retirement, not arbitrary deletion. Target concise boards, not hard information loss.
-- Delete only inside the selected real `local_tests/` scope; never follow symlinks or
-  cross mounts. Legacy non-namespaced paths need explicit ownership/scope confirmation.
-- Never delete `.coworkers/tasks/`, another task's records, locks, or live board files.
-  Outside scratch, only scoped board compaction and artifact-disposition metadata are
-  allowed; no source/environment changes or automatic archival/migration.
-- Do not compact other active boards during task cleanup. Project-wide compaction
-  requires their owners' agreement. Never transfer tasks/claims or stop others' jobs.
-- Report removed/retained counts, freed space only if measured, deferred items and
-  unfinished metadata updates. On a conflict after deletion, report the actual deletion
-  and reconcile metadata; do not imply that file and board operations were atomic.
+- Bottom is latest (`YYYY-MM-DD HH:MM`); never re-sort or invent times.
+  Registries are never FIFO (~15 useful rows via consolidation/approved retirement).
+- Delete only inside the selected real `local_tests/` scope; no symlinks or mount
+  crossings. Legacy non-namespaced paths need explicit confirmation.
+- Never delete `.coworkers/tasks/`, other tasks' boards/records, lock files, or stop
+  others' jobs/steal claims. Project-wide board compaction needs owners' agreement.
+- Report removed/retained counts, freed space only if measured, deferred items, and any
+  post-deletion metadata conflicts (file deletion and board updates are not atomic).

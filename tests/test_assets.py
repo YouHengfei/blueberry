@@ -23,16 +23,34 @@ spec.loader.exec_module(coord)
 class AssetTests(unittest.TestCase):
     def test_router_budget_and_not_a_second_board(self):
         text = (GENERAL / "system-prompts/project.md").read_text()
-        self.assertLessEqual(len(text.split()), 160)
+        self.assertLessEqual(len(text.split()), 110)
         self.assertIn("selected task", text)
         self.assertIn("discussion-only", text)
         self.assertNotIn("| Resource |", text)
         self.assertNotIn("## Current task", text)
 
+    def test_prompt_and_workflow_footprint_budgets(self):
+        budgets = {
+            "system-prompts/project.md": 110,
+            "WORKFLOW.md": 550,
+            "tools/README.md": 400,
+            "skills/local-tests-cleaner/SKILL.md": 430,
+            "templates/COWORKERS.template.md": 230,
+            "templates/TASK.template.md": 240,
+            "templates/SHARED.template.md": 170,
+            "templates/STAGE.template.md": 150,
+            "templates/TASK_README.template.md": 220,
+            "templates/local_tests-policy.md": 220,
+        }
+        for relative, limit in budgets.items():
+            words = len((GENERAL / relative).read_text().split())
+            with self.subTest(asset=relative, words=words, limit=limit):
+                self.assertLessEqual(words, limit, f"{relative} is {words} words (limit {limit})")
+
     def test_project_index_and_task_templates_are_separate(self):
         index = (GENERAL / "templates/COWORKERS.template.md").read_text()
         task = (GENERAL / "templates/TASK.template.md").read_text()
-        self.assertLessEqual(len(index.splitlines()), 60)
+        self.assertLessEqual(len(index.splitlines()), 40)
         self.assertIn("Active task index", index)
         self.assertNotIn("## Current task", index)
         for field in ("Goal:", "State:", "Stage:", "Planner:", "Executors:", "Next:", "Workspace:", "Plan:"):
@@ -56,7 +74,7 @@ class AssetTests(unittest.TestCase):
 
     def test_index_defines_roles_and_avoids_noise(self):
         index = (GENERAL / "templates/COWORKERS.template.md").read_text()
-        self.assertLessEqual(len(index.splitlines()), 60)
+        self.assertLessEqual(len(index.splitlines()), 40)
         for role in ("**Planner**", "**Executor**", "**Reviewer (optional)**"):
             self.assertIn(role, index)
         for noise in ("v2", "docs/` or `notes/"):

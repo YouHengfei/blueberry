@@ -33,7 +33,7 @@ scripted-turn files.
 
 | Scenario | Assertion focus |
 |---|---|
-| `router_overhead` | Always-loaded system-prompt delta vs baseline ≤ 260 words (router itself ≤ 160). Measured: **150 words**. |
+| `router_overhead` | Always-loaded system-prompt delta vs baseline ≤ 180 words (router itself ≤ 110). |
 | `general_no_task` | A general question pulls in no task-board, log, workflow or shared content. |
 | `task_isolation_alpha` | Reading Task A state + current stage leaves sibling-task, other-stage, record and log markers out of every payload. |
 | `evidence_scoping` | One selected evidence log enters; sibling logs, stages and records stay out. |

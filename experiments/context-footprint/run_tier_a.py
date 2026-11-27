@@ -29,8 +29,8 @@ from mock_provider import serve  # noqa: E402
 from scenarios import baseline_scenario, build_scenarios  # noqa: E402
 from grade import grade_scenario, summarize  # noqa: E402
 
-ROUTER_BUDGET_WORDS = 160
-OVERHEAD_BUDGET_WORDS = 260  # router + skill descriptions + harness boilerplate delta
+ROUTER_BUDGET_WORDS = 110
+OVERHEAD_BUDGET_WORDS = 180  # router + skill descriptions + harness boilerplate delta
 
 SKILL_SOURCE = Path(__file__).resolve().parents[2] / "toolkit/general/skills/local-tests-cleaner"
 ROUTER_SOURCE = Path(__file__).resolve().parents[2] / "toolkit/general/system-prompts/project.md"

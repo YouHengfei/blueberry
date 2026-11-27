@@ -4,59 +4,49 @@ Task ID: `<task_id>` · Outcome: in progress / solved / partial / rejected / can
 
 ## At a glance
 
-What was wrong, what changed, did it work, and where is the proof? Keep this opening
-short enough for a human or a fresh agent to understand without reading the history.
+Problem, change, outcome and proof in 2–4 concise sentences.
 
 ## Problem and scope
 
-- Impact, starting point, goals and non-goals.
-- Relevant project rules and dependencies (links, not copies).
+- Impact, baseline, goals, non-goals and linked project rules/dependencies.
 
 ## Cause and solution
 
-- Supported explanation; distinguish measured facts from remaining hypotheses.
-- Changes and why they address the problem.
-- Important alternatives rejected, with reasons and evidence.
+- Verified cause vs. remaining hypotheses; changes made and key rejected alternatives.
 
 ## Stages and revisions
 
 | Stage | Plan / findings | Tested code revision | Outcome |
 |---|---|---|---|
 
-Stage documents are optional for small tasks. Keep local checkpoint references
-reachable through history rewriting; a moving branch name is not test provenance.
+Keep local checkpoint refs reachable; a moving branch name is not provenance.
 
 ## Validation
 
 | Check | Code / config / environment | Baseline | Result | Acceptance / exception |
 |---|---|---|---|---|
 
-Unchanged baseline failures are not passing tests. Incomparable evidence is
-inconclusive. State what was not tested; do not turn partial evidence into acceptance.
+Unchanged failures are not passes; state what was not tested.
 
 ## Reproduce
 
-Prerequisites, immutable code/config inputs, commands and expected observations.
-Do not store credentials or unredacted sensitive logs, even in local Git history.
+Prerequisites, immutable code/config inputs, commands and expected output (no secrets).
 
 ## Evidence manifest
 
-| Artifact / real workspace | Retained or intentionally removed | Provenance / checksum | Purpose |
+| Artifact / real workspace | Retained or removed | Provenance / checksum | Purpose |
 |---|---|---|---|
 
-Retained raw outputs normally stay outside Git. If removed, record the conclusion,
-removal disposition and verification limitations; do not leave misleading live links.
+Mark deleted raw outputs as removed with verification limits; avoid live dangling links.
 
 ## Limitations and follow-up
 
-Open risks, constraints and useful next questions. Promote supported engineering
-knowledge into the project's existing docs only after approval; do not duplicate this
-entire investigation there.
+Open risks, constraints and approved doc promotions (do not dump raw transcripts).
 
 ## Closure
 
-- Planner/user acceptance and any explicit exceptions:
-- Keep / promote / delete / defer disposition and approval:
-- Cross-task dependencies and retained evidence registrations:
-- Owned jobs stopped / reservations released:
-- Publication candidate and validation (if authorized); otherwise local only:
+- Acceptance & exceptions:
+- Keep / promote / delete / defer disposition:
+- Cross-task dependencies & retained evidence:
+- Owned jobs stopped / claims released:
+- Publication status: (local only unless authorized)
