@@ -3,12 +3,13 @@
 Run from the blueberry checkout with Python 3.10+ (POSIX for locking):
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 ```
 
 The context-footprint measurement harness lives in
 [experiments/context-footprint](../experiments/context-footprint/README.md): Tier A
-(scripted mock model, zero cost, against the real Pi binary) is runnable and passing;
+(scripted mock model, zero cost, against the real Pi binary using workspace `AGENTS.md`
+and `.agents/skills/`) is runnable and passing;
 Tier B (real models) requires explicit spending authorization. The matrix below is the
 full scenario set; Tier A mechanically covers the assembly rows, not model judgment.
 
@@ -27,10 +28,12 @@ Git configuration. Test subprocesses are the only processes these tests terminat
 - Malformed state fails closed; generic updates cannot edit claims.
 - Path restrictions, symlink/hardlink guards, bounded input and pre/post-replace I/O
   failures (post-replace errors need a fresh snapshot, not an assumption of rollback).
-- Generic template links/frontmatter, a <=160-word static router budget, and a copied
+- Generic template links/frontmatter, unified [INSTALL.md](../INSTALL.md) and Pi /
+  Antigravity adapter contracts, a <=160-word static router budget, and a copied
   helper/template round trip in a disposable project (not automated agent setup).
-- Disposable ordinary/linked Git worktrees: resolved info/exclude, selective ignores,
-  versionable task records and one canonical shared reservation root.
+- Disposable ordinary/linked Git worktrees: resolved info/exclude, selective ignores
+  (preserving `.coworkers/tasks/` and unrelated `.agents/` files), versionable task
+  records and one canonical shared reservation root.
 - Synthetic task-state reads stay scoped to the requested file. This tests helper
   I/O isolation, NOT an LLM's decision about which file to request.
 
@@ -78,9 +81,10 @@ both first-request and continuing-session measurements; tool reads can persist.
 
 ## Harness/model matrix and rollout
 
-Start with Pi's documented version using disposable fixture projects. No live reload
-or migration is required to develop sources. Interactive discovery and actual model
-behavior must be checked separately before claiming them verified.
+Start with Pi's and Antigravity's documented versions using disposable fixture projects.
+No live reload or migration is required to develop sources. Interactive discovery,
+Antigravity request-assembly capture and actual model behavior must be checked separately
+before claiming them verified.
 
 Choose other harnesses according to actual use. Before adding an adapter, read its
 official instruction discovery/precedence, skills, prompt templates, session, subagent

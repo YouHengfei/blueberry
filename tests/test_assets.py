@@ -96,9 +96,44 @@ class AssetTests(unittest.TestCase):
         self.assertIn("only this conversation", prompt)
         self.assertIn("discussion-only", prompt)
         package = json.loads((ROOT / "package.json").read_text())
-        self.assertEqual(set(package["pi"]), {"skills"})
+        self.assertEqual(package["pi"], {"skills": ["toolkit/general/skills"]})
         self.assertFalse(package.get("dependencies"))
         self.assertFalse(package.get("scripts"))
+
+    def test_antigravity_adapter_and_task_skill_contract(self):
+        adapter = (ROOT / "toolkit/specific/agent-specific/antigravity/README.md").read_text()
+        for required in ("AGENTS.md", ".agents/skills/<name>/", "trigger: always_on",
+                         ".agents/rules/blueberry.md", "/skills reload",
+                         "~/.gemini/antigravity-cli/skills/", "disable-model-invocation: true",
+                         "Never blanket-ignore `.agents/`"):
+            self.assertIn(required, adapter)
+        skill_path = ROOT / "toolkit/specific/agent-specific/antigravity/skills/task/SKILL.md"
+        skill = skill_path.read_text()
+        self.assertTrue(skill.startswith("---\n"))
+        metadata = skill.split("---", 2)[1]
+        self.assertIn(f"name: {skill_path.parent.name}\n", metadata)
+        self.assertIn("description:", metadata)
+        self.assertIn("disable-model-invocation: true", metadata)
+        for required in ("only this conversation", "discussion-only",
+                         "current-task file", "do not read all task boards"):
+            self.assertIn(required, skill)
+
+    def test_unified_install_and_pi_agents_md_alignment(self):
+        install = (ROOT / "INSTALL.md").read_text()
+        for required in ("pi/README.md", "antigravity/README.md", "AGENTS.md",
+                         ".agents/skills/<name>/SKILL.md", "<!-- blueberry:router:start -->",
+                         "<!-- blueberry:router:end -->", "AGENTS.override.md",
+                         "--path-format=absolute", "snapshot COWORKERS.md",
+                         "preserved\n   untracked paths",
+                         "## Multi-harness coexistence", "## Setup procedure",
+                         "## Update procedure", "## Uninstall procedure",
+                         "## Legacy board migration",
+                         "Never blanket-ignore `.coworkers/`, `.agents/` or `.pi/`"):
+            self.assertIn(required, install)
+        pi_adapter = (ROOT / "toolkit/specific/agent-specific/pi/README.md").read_text()
+        for required in ("AGENTS.md", ".agents/skills/<name>/", "AGENTS.override.md",
+                         "--approve", ".pi/APPEND_SYSTEM.md"):
+            self.assertIn(required, pi_adapter)
 
     def test_shared_template_is_parseable_empty_state(self):
         text = (GENERAL / "templates/SHARED.template.md").read_text()
@@ -106,7 +141,8 @@ class AssetTests(unittest.TestCase):
         self.assertEqual(coord.render_claims(text, []), text)
 
     def test_markdown_links_resolve(self):
-        files = [ROOT / "README.md", *ROOT.glob("toolkit/**/*.md"), ROOT / "tests/README.md"]
+        files = [ROOT / "README.md", ROOT / "INSTALL.md",
+                 *ROOT.glob("toolkit/**/*.md"), ROOT / "tests/README.md"]
         for path in files:
             for match in re.finditer(r"\[[^\]\n]+\]\(([^)\n]+)\)", path.read_text()):
                 link = match.group(1)
@@ -257,6 +293,31 @@ class GitWorkspaceTests(unittest.TestCase):
         self.assertEqual(self.git(self.repo, "ls-files", "COWORKERS.md").stdout.strip(), "COWORKERS.md")
         self.assertEqual(hashlib.sha256(board.read_bytes()).hexdigest(), before)
         self.assertNotEqual(self.git(self.repo, "check-ignore", "-q", "COWORKERS.md", check=False).returncode, 0)
+
+    def test_selective_exclusion_preserves_tracked_agents_files(self):
+        team_rule = self.repo / ".agents/rules/project-style.md"
+        team_rule.parent.mkdir(parents=True)
+        team_rule.write_text("---\ntrigger: always_on\n---\n# Team style\n")
+        self.git(self.repo, "add", ".agents/rules/project-style.md")
+        self.git(self.repo, "commit", "-qm", "fixture team rule")
+        patterns = ("/COWORKERS.md", "/.coworkers/state/", "/.coworkers/tools/",
+                    "/.coworkers/WORKFLOW.md", "/local_tests/",
+                    "/.agents/skills/local-tests-cleaner/", "/.agents/skills/task/",
+                    "/.pi/prompts/task.md")
+        exclude = self.exclude(self.repo)
+        exclude.write_text(exclude.read_text() + "\n" + "\n".join(patterns) + "\n")
+        for relative in (".agents/skills/local-tests-cleaner/SKILL.md",
+                         ".agents/skills/task/SKILL.md", ".pi/prompts/task.md"):
+            path = self.repo / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("fixture")
+            self.assertEqual(self.git(self.repo, "check-ignore", "-q", relative, check=False).returncode, 0)
+        untracked_team_skill = self.repo / ".agents/skills/team-linter/SKILL.md"
+        untracked_team_skill.parent.mkdir(parents=True)
+        untracked_team_skill.write_text("---\nname: team-linter\ndescription: fixture\n---\n")
+        for preserved in (".agents/rules/project-style.md", ".agents/skills/team-linter/SKILL.md"):
+            self.assertNotEqual(self.git(self.repo, "check-ignore", "-q", preserved, check=False).returncode, 0)
+        self.assertEqual((self.repo / ".gitignore").read_bytes(), self.before_ignore)
 
 
 if __name__ == "__main__":

@@ -5,8 +5,8 @@ points to the project-local `COWORKERS.md` and selected task. It contains no pro
 profile, resource inventory, detailed role manual or task content. The current
 static budget is <=160 whitespace-delimited words; this is not a token measurement.
 
-The [agent setup procedure](../../../README.md#agent-setup-procedure) copies or
-merges it into the harness's supported instruction entry point after checking
+The [setup procedure](../../../INSTALL.md#setup-procedure) copies or
+merges it into `AGENTS.md` (or the harness's documented fallback entry point) after checking
 existing instructions and precedence. Read the relevant
 [harness notes](../../specific/agent-specific/README.md) first.
 

@@ -36,9 +36,8 @@ SKILL_SOURCE = Path(__file__).resolve().parents[2] / "toolkit/general/skills/loc
 ROUTER_SOURCE = Path(__file__).resolve().parents[2] / "toolkit/general/system-prompts/project.md"
 
 
-def build_agent_dir(base: Path, install_assets: bool, port: int) -> Path:
-    name = "blueberry" if install_assets else "baseline"
-    agent = base / (f"agent-{name}-{port}")
+def build_agent_dir(base: Path, label: str, port: int) -> Path:
+    agent = base / f"agent-{label}-{port}"
     (agent / "skills").mkdir(parents=True)
     (agent / "models.json").write_text(json.dumps({
         "$schema": "https://pi.dev/schemas/models.schema.json",
@@ -50,10 +49,15 @@ def build_agent_dir(base: Path, install_assets: bool, port: int) -> Path:
     (agent / "settings.json").write_text(json.dumps({
         "defaultProvider": "mock", "defaultModel": "mock-1", "compaction": {"enabled": False},
     }))
-    if install_assets:
-        (agent / "APPEND_SYSTEM.md").write_text(ROUTER_SOURCE.read_text())
-        shutil.copytree(SKILL_SOURCE, agent / "skills/local-tests-cleaner")
     return agent
+
+
+def install_workspace_assets(workspace: Path) -> None:
+    router = ROUTER_SOURCE.read_text()
+    (workspace / "AGENTS.md").write_text(
+        f"<!-- blueberry:router:start -->\n{router}<!-- blueberry:router:end -->\n"
+    )
+    shutil.copytree(SKILL_SOURCE, workspace / ".agents/skills/local-tests-cleaner")
 
 
 def run_scenario(pi, workspace, base, scenario, out_dir):
@@ -62,7 +66,7 @@ def run_scenario(pi, workspace, base, scenario, out_dir):
     log_path = out_dir / f"{scenario['id']}.requests.jsonl"
     server, port = serve(str(script_path), str(log_path))
     try:
-        agent_dir = build_agent_dir(base, True, port)
+        agent_dir = build_agent_dir(base, "blueberry", port)
         env = dict(os.environ)
         env["PI_CODING_AGENT_DIR"] = str(agent_dir)
         env.pop("PI_CODING_AGENT_SESSION_DIR", None)
@@ -70,7 +74,8 @@ def run_scenario(pi, workspace, base, scenario, out_dir):
         for key in ("NO_PROXY", "no_proxy"):
             env[key] = "127.0.0.1,localhost"
         process = subprocess.run(
-            [pi, "--no-session", "--provider", "mock", "--model", "mock-1", "-p", scenario["user"]],
+            [pi, "--approve", "--no-session", "--provider", "mock", "--model", "mock-1",
+             "-p", scenario["user"]],
             cwd=workspace, env=env, capture_output=True, text=True, timeout=120)
     finally:
         server.shutdown()
@@ -102,14 +107,17 @@ def main():
         for name, install_assets in configurations:
             workspace = base / f"workspace-{name}"
             workspace.mkdir()
+            (workspace / ".git").mkdir()
             paths = build_fixture(workspace, install=install_assets)
+            if install_assets:
+                install_workspace_assets(workspace)
             script_path = out_dir / f"{name}-boot.json"
             script_path.write_text(json.dumps([{"content": "Fixture explanation."}]))
             # Boot run only captures the assembled system prompt (single scripted reply).
             log_path = out_dir / f"{name}-boot.requests.jsonl"
             server, port = serve(str(script_path), str(log_path))
             try:
-                agent_dir = build_agent_dir(base, install_assets, port)
+                agent_dir = build_agent_dir(base, name, port)
                 env = dict(os.environ)
                 env["PI_CODING_AGENT_DIR"] = str(agent_dir)
                 env.pop("PI_CODING_AGENT_SESSION_DIR", None)
@@ -120,7 +128,8 @@ def main():
                 if name == "blueberry":
                     prompt = "Task: alpha_probe. " + prompt
                 process = subprocess.run(
-                    [args.pi, "--no-session", "--provider", "mock", "--model", "mock-1", "-p", prompt],
+                    [args.pi, "--approve", "--no-session", "--provider", "mock",
+                     "--model", "mock-1", "-p", prompt],
                     cwd=workspace, env=env, capture_output=True, text=True, timeout=120)
             finally:
                 server.shutdown()
@@ -149,7 +158,9 @@ def main():
 
         workspace = base / "workspace-blueberry2"
         workspace.mkdir()
+        (workspace / ".git").mkdir()
         paths = build_fixture(workspace, install=True)
+        install_workspace_assets(workspace)
         for scenario in build_scenarios(paths):
             if args.scenario and scenario["id"] != args.scenario:
                 continue

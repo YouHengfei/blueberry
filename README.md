@@ -44,6 +44,8 @@ flowchart TD
 ## Layout in an adopting project
 
 ```text
+AGENTS.md                            # Shared router entry point (marked additive merge)
+.agents/skills/<name>/SKILL.md       # Shared explicit skills (Pi + Antigravity)
 COWORKERS.md                         # Small index and project pointers
 .coworkers/
   WORKFLOW.md                        # On-demand workflow/user guide
@@ -62,6 +64,18 @@ Adoption claims no existing project directory; records use their own namespace.
 Preserve existing evidence paths instead of moving them for aesthetics.
 Across worktrees, use one canonical coordination root; versioned records belong in
 the task worktree, whose actual path is recorded in its state board.
+
+## Supported harnesses
+
+Pi and Antigravity share `AGENTS.md` and `.agents/skills/`, so single- or dual-harness
+repositories avoid duplicate routers and duplicate skills. Full rules and lifecycle steps
+live in [INSTALL.md](INSTALL.md) and [harness notes](toolkit/specific/agent-specific/README.md):
+
+| Harness | Router entry point | Skills | Optional `/task` | Adapter |
+|---|---|---|---|---|
+| **Pi (`1.6.x`)** | `AGENTS.md` (marked merge) | `.agents/skills/<name>/` | `.pi/prompts/task.md` (`/task`) | [pi/README.md](toolkit/specific/agent-specific/pi/README.md) |
+| **Antigravity (`1.5.x`)** | `AGENTS.md` (marked merge) | `.agents/skills/<name>/` | `.agents/skills/task/SKILL.md` (`/task`) | [antigravity/README.md](toolkit/specific/agent-specific/antigravity/README.md) |
+| **Other harnesses** | Verify official docs first | Verify explicit discovery | Optional | [agent-specific/README.md](toolkit/specific/agent-specific/README.md) |
 
 ## User guide
 
@@ -91,26 +105,28 @@ not a security boundary or a replacement for live availability checks.
 ## Give this prompt to your agent
 
 ```text
-Read <blueberry-checkout>/README.md and follow its agent setup procedure.
-Set up blueberry in <target-repository> for the current agent harness.
-If either path is missing or ambiguous, ask first; never guess or proceed.
+Read <blueberry-checkout>/INSTALL.md and follow its Setup procedure.
+Set up blueberry in <target-repository> for the current agent harness (or specify pi / antigravity / both).
+If either path or the target harness is missing or ambiguous, ask first; never guess or proceed.
 Preserve existing instructions, boards, running work, reservations and evidence,
-including unrelated harness resources such as settings, skills and extensions.
-Ask before conflicts, task creation or migration. Use local copies, not symlinks.
-Do not change global settings, run workloads/cleanup, or commit/push.
+including unrelated harness resources in AGENTS.md, .agents/ and .pi/.
+Ask before editing a Git-tracked AGENTS.md, resolving conflicts, creating tasks or migrating.
+Use local copies, not symlinks. Do not change global settings, run workloads/cleanup, or commit/push.
 Validate, report created/preserved/skipped items, and explain reload requirements.
 ```
 
 ## Update an installation
 
-Installed copies change only through this explicit flow; `git pull` never updates them.
+Installed copies change only through the explicit [update procedure](INSTALL.md#update-procedure);
+`git pull` never updates them.
 
 ```text
-Read <blueberry-checkout>/README.md and update the existing blueberry installation in
-<target-repository> for the current agent harness.
-If a path is missing or ambiguous, or no installation exists, ask first.
+Read <blueberry-checkout>/INSTALL.md and follow its Update procedure for
+<target-repository> and its installed harness(es).
+If a path or harness is missing or ambiguous, or no installation exists, ask first.
 Compare each installed asset with the source; propose an additive merge that preserves
-local modifications, unrelated instructions and other harness resources.
+local modifications, unrelated instructions and other harness resources (including
+clean migration from legacy .pi/APPEND_SYSTEM.md or .pi/skills/ copies after approval).
 Layout/board changes require the documented paused-writer migration; never mix a new
 cleaner with an unmigrated live board. Do not run workloads, cleanup or commit/push.
 Report applied, skipped and conflicting changes with required reload steps.
@@ -118,109 +134,58 @@ Report applied, skipped and conflicting changes with required reload steps.
 
 ## Uninstall
 
-Removal reverses only installed assets; coordination data and evidence are project history.
+Removal follows the [uninstall procedure](INSTALL.md#uninstall-procedure) and reverses
+only installed assets; coordination data and evidence are project history.
 
 ```text
-Read <blueberry-checkout>/README.md and remove the blueberry installation from
-<target-repository> for the current agent harness.
-If a path is missing or ambiguous, ask first; inventory installed pieces before deleting.
-Remove only installed instructions, skills, prompts, helper and workflow; revert only
-blueberry-added ignore rules and merge sections. Restore anything ambiguous by asking.
+Read <blueberry-checkout>/INSTALL.md and follow its Uninstall procedure to remove the
+blueberry installation from <target-repository> for the requested harness(es).
+If a path or harness is missing or ambiguous, ask first; inventory installed pieces before deleting.
+Remove only installed blueberry router blocks, skills, prompts, helper and workflow;
+revert only blueberry-added ignore rules. Restore anything ambiguous by asking.
 Preserve COWORKERS.md, .coworkers/ records and state, local_tests and evidence by
 default; deleting them requires explicit approval. Never stop jobs or delete evidence.
 Validate and report removed, preserved and leftover items.
 ```
 
-## Agent setup procedure
+## Agent setup summary
 
-### 1. Inspect
+Full step-by-step instructions, multi-harness coexistence rules, selective `info/exclude`
+patterns and migration gates are in [INSTALL.md](INSTALL.md):
 
-Resolve the source checkout and target root (Git top-level where available); show
-both. Do not install into blueberry itself unless explicitly requested. Inspect
-existing instructions, boards, `.coworkers/`, ignore rules and relevant project docs.
-Check inherited skills/prompts for collisions. Read the relevant
-[harness notes](toolkit/specific/agent-specific/README.md); unknown harness loading
-rules must be verified from official docs, not guessed. Reading a skill is not invoking it.
-
-If an existing single-board workflow or any active writer would be affected, stop
-before deployment and propose the separate migration below. Never mix a task-scoped
-cleaner with an unmigrated board. Source changes do not update installed copies.
-
-### 2. Select and explain
-
-Use the [asset map](toolkit/README.md). Explain the intended files and preserve the
-project's engineering instructions. Select only useful explicit skills and optionally
-the harness's task-selection prompt. Choose one real canonical coordination root for
-all participating worktrees; verify a suitable local POSIX filesystem before using
-the helper. Do not promise distributed/network-filesystem locking guarantees.
-
-### 3. Create or preserve
-
-- Copy by default; never follow symlink destinations or parents when writing.
-  Existing identical assets need no change. For differing instruction entry points,
-  propose an additive, clearly marked merge that preserves every existing line; ask
-  before reordering or removing anything. No competing instruction entry points.
-- Treat unrelated harness resources (settings, extensions, prompts, skills, context
-  files) as preserved context: inspect them, report collisions, never remove or
-  override them to make room for blueberry.
-- If absent and approved, copy the project index and shared-board templates, workflow
-  guide and helper directory. Populate only verified context/root/namespace pointers.
-  Do not invent task owners, resource availability, tests or example active claims.
-- Create task state/records only for a selected, authorized task; optional stage docs
-  are not mandatory bureaucracy. Use the helper for subsequent coordination writes.
-- Existing boards remain byte-for-byte unchanged during ordinary setup, including on
-  repeat setup. Record source revision, selected assets and harness in new setup provenance.
-- Resolve the local exclude file with `git rev-parse --git-path info/exclude` (linked
-  worktrees can have a `.git` file). Create the exclude file/parent if absent after
-  checking for symlinks. Preserve effective rules and add only missing ones:
-  `/COWORKERS.md`, `/.coworkers/state/`, `/.coworkers/tools/`, `/.coworkers/WORKFLOW.md`,
-  and `/local_tests/` if this scratch policy is adopted. Do not modify tracked `.gitignore`.
-- **Do not blanket-ignore `.coworkers/`.** Durable `.coworkers/tasks/` records remain
-  eligible for explicit local commits. If broader existing ignore rules hide them,
-  report the conflict; never silently force-add or change rules. Tracked state needs
-  a user decision: ignores do not untrack files, and setup never runs `git rm`.
-- Without Git, report unavailable exclusion/versioning; do not initialize automatically.
-  Install harness resources only after checking precedence and project trust behavior.
-
-### 4. Verify and report
-
-Verify regular files, references, canonical root, skill frontmatter/names, duplicate
-resource discovery, and explicit invocation. Check effective ignore rules with
-`git check-ignore -v`; verify task records are not accidentally excluded, including
-in linked worktrees. Confirm tracked `.gitignore` is unchanged. Preserve pre-existing
-boards and report unresolved tracked/ignore/instruction conflicts, not success.
-
-Review diffs: no unrelated changes, global settings, workload starts/stops, reservations,
-artifact deletion or commits. Validate helper/templates in disposable fixtures, not by
-running a real cleanup or claiming live devices. Report created/preserved/skipped items,
-remaining conflicts and harness reload steps. Do not claim interactive discovery or
-model behavior that was not exercised.
-
-## Migration and updates
-
-Existing installed copies update by approved comparison/merge, not symlinks or `git pull`.
-Migration requires a paused-writer window and participant agreement. Preserve a recovery
-copy; split task/shared content without losing constraints, evidence paths, timestamps
-or attribution; review history into bottom-latest order once, preserving ties and
-uncertainty. No automatic evidence movement, cleanup, ownership transfer or job restart.
-Publish canonical pointers, merge prompts/skills consistently, and reload/rebind all
-participating sessions before resuming writers. If work cannot pause, defer migration.
+1. **Inspect:** verify `<blueberry-checkout>`, `<target-repository>` and target harness
+   adapter ([pi](toolkit/specific/agent-specific/pi/README.md),
+   [antigravity](toolkit/specific/agent-specific/antigravity/README.md)); stop if an
+   unmigrated board or active writer would be affected.
+2. **Select and explain:** map generic assets ([toolkit/README.md](toolkit/README.md)),
+   shared `AGENTS.md` + `.agents/skills/` targets, optional `/task` helper and one local
+   POSIX coordination root across worktrees.
+3. **Create or preserve:** copy regular files, merge `AGENTS.md` inside
+   `<!-- blueberry:router:start -->` / `<!-- blueberry:router:end -->` markers (asking
+   first if `AGENTS.md` is Git-tracked), record setup provenance in `COWORKERS.md`, and
+   update `git rev-parse --git-path info/exclude` selectively without blanket-ignoring
+   `.coworkers/`, `.agents/` or `.pi/` or editing tracked `.gitignore`.
+4. **Verify and report:** verify links, skill frontmatter, duplicate discovery, and
+   `git check-ignore -v` (confirming `.coworkers/tasks/` and tracked `.agents/` files stay
+   unignored), then report changes and harness reload commands.
 
 For publication, local-only task records must be absent from the entire published
-history when not approved—not merely removed in its last commit. See the workflow
-Git section. The optional `package.json` exports only general skills; it neither
-initializes this layout nor authorizes upgrading a legacy live installation.
+history when not approved—not merely removed in its last commit (see
+[WORKFLOW.md](toolkit/general/WORKFLOW.md)). The optional `package.json` exports only
+general skills for Pi; it neither initializes `.coworkers/` nor authorizes upgrading a
+legacy live installation.
 
 ## Validation and compatibility
 
 Run isolated checks from this checkout:
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests -v
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 ```
 
-See the [test guide and future context-footprint matrix](tests/README.md). Static
-prompt-size checks and filesystem concurrency tests are not proof of an LLM's task
-selection or a harness's actual request payload. Pi loading rules are documented;
-interactive multi-agent footprint measurements and other harness adapters remain
-explicit validation work, not claimed compatibility.
+See the [test guide and context-footprint matrix](tests/README.md). Static prompt-size
+checks and filesystem concurrency tests are not proof of an LLM's task selection. Pi
+(`1.6.x`) and Antigravity (`1.5.x`) loading rules are documented, and Pi Tier A request
+assembly is measured against `AGENTS.md` + `.agents/skills/`; interactive multi-agent
+behavior, Antigravity request-assembly capture and Tier B model runs remain explicit
+validation work, not claimed compatibility.

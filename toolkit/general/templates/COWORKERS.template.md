@@ -55,5 +55,5 @@ and closure is agreed. Live status and participants belong only in the task boar
 
 ## Setup provenance
 
-- Source checkout/revision, selected assets, verified harness: (record at setup)
+- Source checkout/revision, installed harness(es), installed asset paths: (record at setup)
 - Existing installations: preserve first; migration requires a paused-writer window.

@@ -1,6 +1,6 @@
 # General assets
 
-Project-neutral sources for the [setup procedure](../../README.md#agent-setup-procedure).
+Project-neutral sources for the [setup procedure](../../INSTALL.md#setup-procedure).
 The [asset map](../README.md) lists exact destinations.
 
 - [system-prompts/project.md](system-prompts/project.md): short task router; no profiles.

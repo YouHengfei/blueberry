@@ -14,14 +14,16 @@ always-loaded overhead stays in budget. It says nothing about model judgment.
 
 ```bash
 cd experiments/context-footprint
-python run_tier_a.py --keep          # runs against `pi` found on PATH
-python run_tier_a.py --pi /path/to/pi --scenario task_isolation_alpha --out /tmp/out
+python3 run_tier_a.py --keep          # runs against `pi` found on PATH
+python3 run_tier_a.py --pi /path/to/pi --scenario task_isolation_alpha --out /tmp/out
 ```
 
-Each run creates disposable fixture workspaces and disposable agent directories
-(`PI_CODING_AGENT_DIR`); user-level configuration is never touched. The mock provider
-is loopback-only and the runner sets `NO_PROXY=127.0.0.1,localhost` so an ambient
-HTTP proxy cannot tunnel it. A full run finishes in well under a minute.
+Each run creates disposable fixture workspaces (installing `AGENTS.md` and
+`.agents/skills/local-tests-cleaner` for the blueberry configuration, bounded by `.git`
+and trusted for that invocation only via `--approve`) and disposable agent directories
+(`PI_CODING_AGENT_DIR`); user-level configuration (`~/.pi/agent`) is never touched. The
+mock provider is loopback-only and the runner sets `NO_PROXY=127.0.0.1,localhost` so an
+ambient HTTP proxy cannot tunnel it. A full run finishes in well under a minute.
 
 Outputs (default: a printed temp directory): `report.md`, `results.json`, one
 `<scenario>.requests.jsonl` per scenario (the exact assembled request bodies), plus
