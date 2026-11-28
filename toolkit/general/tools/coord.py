@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import re
 import stat
+import subprocess
 import sys
 import tempfile
 import time
@@ -30,6 +31,7 @@ SEPARATOR = "|---|---|---|---|---|---|"
 TASK = re.compile(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)*\Z")
 SESSION = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}\Z")
 COMPONENT = re.compile(r"[A-Za-z0-9_.:-]+\Z")
+STATES = ("ready", "running", "blocked", "review", "done", "cancelled")
 
 
 class CoordinationError(Exception):
@@ -72,6 +74,26 @@ def overlaps(left, right):
 
 def revision(content):
     return "missing" if content is None else hashlib.sha256(content).hexdigest()
+
+
+def resolve_root(explicit_root=None, cwd=None):
+    """Return explicit canonical root or auto-detect main Git repo root via git-common-dir."""
+    if explicit_root is not None:
+        return Path(explicit_root)
+    base = Path(cwd) if cwd is not None else Path.cwd()
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(base), "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            capture_output=True, text=True, timeout=5,
+        )
+    except OSError as exc:
+        raise CoordinationError("git unavailable; pass --root explicitly") from exc
+    if proc.returncode != 0:
+        raise CoordinationError("not inside a Git worktree; pass --root explicitly")
+    common = Path(proc.stdout.strip())
+    if common.name != ".git":
+        raise CoordinationError("cannot infer workspace root from bare Git common dir; pass --root explicitly")
+    return common.parent.resolve()
 
 
 def parse_claims(text):
@@ -118,6 +140,118 @@ def render_claims(text, claims):
     before, remainder = text.split(START)
     _, after = remainder.split(END)
     return before + START + "\n" + "\n".join(rows) + "\n" + END + after
+
+
+def _section_bounds(lines, heading):
+    start = next((i for i, line in enumerate(lines) if line.strip() == heading), None)
+    if start is None:
+        raise CoordinationError(f"missing required section: {heading}")
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+    return start, end
+
+
+def _parse_task_fields(text):
+    fields = {}
+    for line in text.splitlines():
+        if line.startswith("## ") and fields:
+            break
+        match = re.match(r"^- ([^:]+):\s*(.*)$", line)
+        if match:
+            fields[match.group(1).strip()] = match.group(2).strip()
+    return fields
+
+
+def _update_section_field(lines, start, end, label, value):
+    prefix = f"- {label}:"
+    for idx in range(start + 1, end):
+        if lines[idx].startswith(prefix):
+            if value == "":
+                del lines[idx]
+                return end - 1
+            lines[idx] = f"{prefix} {value}"
+            return end
+    if value == "":
+        return end
+    insert_at = end
+    while insert_at > start + 1 and not lines[insert_at - 1].strip():
+        insert_at -= 1
+    lines.insert(insert_at, f"{prefix} {value}")
+    return end + 1
+
+
+def _append_section_line(lines, heading, entry):
+    start, end = _section_bounds(lines, heading)
+    insert_at = end
+    while insert_at > start + 1 and not lines[insert_at - 1].strip():
+        insert_at -= 1
+    lines.insert(insert_at, entry)
+    return lines
+
+
+def _append_index_row(text, row):
+    lines = text.splitlines()
+    start, end = _section_bounds(lines, "## Active task index")
+    sep = next((i for i in range(start + 1, end) if lines[i].strip().startswith("|---")), None)
+    if sep is None:
+        raise CoordinationError("missing Active task index table in COWORKERS.md")
+    insert_at = sep + 1
+    while insert_at < end and lines[insert_at].lstrip().startswith("|"):
+        insert_at += 1
+    lines.insert(insert_at, row)
+    return "\n".join(lines) + ("\n" if text.endswith("\n") else "")
+
+
+def _render_task_board(task, goal, planner, workspace):
+    return (
+        f"# Task: {task}\n\n"
+        "## Current state\n\n"
+        f"- Goal: {goal}\n"
+        "- State: ready\n"
+        "- Stage: single_stage\n"
+        f"- Planner: {planner}\n"
+        "- Executors: (unassigned)\n"
+        "- Reviewer: (optional)\n"
+        f"- Next: {planner} — define plan and acceptance checks\n"
+        f"- Workspace: {workspace}\n"
+        f"- Records: .coworkers/tasks/{task}/README.md\n"
+        "- Plan: (inline or stage link)\n\n"
+        "## Scope and acceptance\n\n"
+        "- Write scope & non-goals: (intended scope is not an active claim)\n"
+        "- Acceptance: (observable checks, thresholds, exceptions)\n"
+        "- Planner-owned acceptance check (before `ready`): (plan/command, expected result, negative cases; WORKFLOW.md §2)\n"
+        "- Dependencies: (register cross-task uses in `shared.md`)\n\n"
+        "## Open questions\n\n"
+        "## Decisions\n\n"
+        "## Handoffs\n\n"
+        "## Retained artifacts\n\n"
+        "| Added | Path | Purpose / reproduction | Consumers / protection | Last used |\n"
+        "|---|---|---|---|---|\n\n"
+        "## Closure\n\n"
+        "- Acceptance / exceptions:\n"
+        "- Task README & cleanup disposition:\n"
+        "- Owned jobs stopped & claims released:\n"
+        "- Publication: local only unless authorized.\n"
+    )
+
+
+def _render_task_record(task, goal):
+    return (
+        f"# {task}\n\n"
+        f"Task ID: `{task}` · Outcome: in progress\n\n"
+        "## At a glance\n\n"
+        f"{goal}\n\n"
+        "## Validation\n\n"
+        "| Check | Code / config / environment | Baseline | Result | Acceptance / exception |\n"
+        "|---|---|---|---|---|\n\n"
+        "## Evidence manifest\n\n"
+        "| Artifact / real workspace | Retained or removed | Provenance / checksum | Purpose |\n"
+        "|---|---|---|---|---|\n\n"
+        "## Closure\n\n"
+        "- Acceptance & exceptions:\n"
+        "- Keep / promote / delete / defer disposition:\n"
+        "- Owned jobs stopped / claims released:\n"
+        "- Publication status: local only unless authorized\n"
+    )
 
 
 class Store:
@@ -296,10 +430,138 @@ class Store:
             self.replace(SHARED, new_text.encode())
         return {"claim": claim_id, "revision": revision(new_text.encode()), "action": action}
 
+    def status(self):
+        """Read-only cross-task and claims summary; creates no files or locks."""
+        shared = self.read(SHARED)
+        claims = parse_claims(shared.decode()) if shared is not None else []
+        tasks = []
+        tasks_dir = self.root / ".coworkers/state/tasks"
+        if tasks_dir.exists() and not tasks_dir.is_symlink() and tasks_dir.is_dir():
+            for entry in sorted(tasks_dir.iterdir()):
+                if entry.suffix != ".md" or not TASK.fullmatch(entry.stem) or len(entry.stem) > 64:
+                    continue
+                rel = f".coworkers/state/tasks/{entry.name}"
+                raw = self.read(rel)
+                if raw is None:
+                    continue
+                fields = _parse_task_fields(raw.decode())
+                tasks.append({
+                    "task": entry.stem,
+                    "state": fields.get("State", ""),
+                    "stage": fields.get("Stage", ""),
+                    "next": fields.get("Next", ""),
+                    "planner": fields.get("Planner", ""),
+                    "executors": fields.get("Executors", ""),
+                    "blocked": fields.get("Blocked by / Unblock", ""),
+                })
+        return {"root": str(self.root), "tasks": tasks, "claims": claims}
+
+    def init_task(self, task, goal, planner="(unassigned)", workspace="(current workspace)", purpose=None):
+        """Create task state board, durable README (if absent), and append COWORKERS.md row."""
+        check_task(task)
+        cell(goal)
+        cell(planner)
+        cell(workspace)
+        summary = cell(purpose if purpose is not None else goal)
+        if self.read("COWORKERS.md") is None:
+            raise CoordinationError("COWORKERS.md missing; run approved setup first")
+        board = f".coworkers/state/tasks/{task}.md"
+        result = self.update(board, "missing", _render_task_board(task, goal, planner, workspace))
+        record_rel = f".coworkers/tasks/{task}/README.md"
+        record_path = self.safe_path(record_rel, create_parents=True)
+        record_created = False
+        if not record_path.exists():
+            fd = os.open(record_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
+            try:
+                with os.fdopen(fd, "wb") as stream:
+                    stream.write(_render_task_record(task, goal).encode("utf-8"))
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                record_created = True
+            except Exception:
+                raise
+        today = datetime.now().strftime("%Y-%m-%d")
+        row = f"| {today} | {task} | {summary} | `{board}` |"
+        with self.lock("COWORKERS.md"):
+            raw = self.read("COWORKERS.md")
+            if raw is None:
+                raise CoordinationError("COWORKERS.md missing; run approved setup first")
+            text = raw.decode()
+            if f"| {task} |" not in text:
+                updated = _append_index_row(text, row)
+                self.replace("COWORKERS.md", updated.encode("utf-8"))
+        return {"task": task, "board": board, "record": record_rel,
+                "record_created": record_created, "revision": result["revision"]}
+
+    def record_entry(self, task, kind, actor, message, state=None, next_action=None,
+                     stage=None, blocker=None, print_prompt=False):
+        """Atomically append a timestamped handoff or decision and optionally update state fields."""
+        check_task(task)
+        cell(actor)
+        cell(message)
+        if kind not in ("handoff", "decision"):
+            raise CoordinationError("kind must be handoff or decision")
+        if state is not None and state not in STATES:
+            raise CoordinationError(f"state must be one of: {', '.join(STATES)}")
+        if next_action is not None:
+            cell(next_action)
+        if stage is not None:
+            cell(stage)
+        if blocker is not None and blocker != "":
+            cell(blocker)
+        board = f".coworkers/state/tasks/{task}.md"
+        heading = "## Handoffs" if kind == "handoff" else "## Decisions"
+        entry = f"- {datetime.now().strftime('%Y-%m-%d %H:%M')} {actor} — {message}"
+        with self.lock(board):
+            previous = self.read(board)
+            if previous is None:
+                raise CoordinationError("task state board missing; create task first")
+            text = previous.decode()
+            lines = text.splitlines()
+            if any(v is not None for v in (state, next_action, stage, blocker)):
+                cs_start, cs_end = _section_bounds(lines, "## Current state")
+                if state is not None:
+                    cs_end = _update_section_field(lines, cs_start, cs_end, "State", state)
+                if stage is not None:
+                    cs_end = _update_section_field(lines, cs_start, cs_end, "Stage", stage)
+                if next_action is not None:
+                    cs_end = _update_section_field(lines, cs_start, cs_end, "Next", next_action)
+                if blocker is not None:
+                    _update_section_field(lines, cs_start, cs_end, "Blocked by / Unblock", blocker)
+            _append_section_line(lines, heading, entry)
+            new_text = "\n".join(lines) + "\n"
+            encoded = new_text.encode("utf-8")
+            self.replace(board, encoded)
+            fields = _parse_task_fields(new_text)
+        out = {"task": task, "kind": kind, "entry": entry, "revision": revision(encoded),
+               "state": fields.get("State", ""), "next": fields.get("Next", "")}
+        if print_prompt:
+            nxt = fields.get("Next", "continue task")
+            out["pickup_prompt"] = (
+                f"Work on task {task}: read COWORKERS.md and {board}, "
+                f"then pick up Next ({nxt})."
+            )
+        return out
+
+
+def format_status_text(data):
+    lines = [f"Root: {data['root']}", "Tasks:"]
+    if not data["tasks"]:
+        lines.append("  (none)")
+    for t in data["tasks"]:
+        extra = f" | blocked: {t['blocked']}" if t["blocked"] else ""
+        lines.append(f"  - {t['task']} [{t['state'] or '?'}] stage={t['stage'] or '?'} | next: {t['next'] or '?'}{extra}")
+    lines.append("Claims:")
+    if not data["claims"]:
+        lines.append("  (none)")
+    for c in data["claims"]:
+        lines.append(f"  - {c['claim'][:8]} {c['task']} ({c['session']}): {', '.join(c['resources'])} [{c['job']}]")
+    return "\n".join(lines)
+
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", required=True, help="canonical coordination root, not an independent worktree copy")
+    parser.add_argument("--root", default=None, help="canonical coordination root (defaults to Git common repo root)")
     parser.add_argument("--timeout", type=float, default=2, help="lock timeout in seconds (0..30)")
     commands = parser.add_subparsers(dest="command", required=True)
     for command in ("snapshot", "update"):
@@ -318,9 +580,28 @@ def main(argv=None):
             p.add_argument("--claim", required=True)
             if command == "annotate":
                 p.add_argument("--job", required=True)
+    p_status = commands.add_parser("status")
+    p_status.add_argument("--format", choices=("json", "text"), default="json")
+    p_init = commands.add_parser("init-task")
+    p_init.add_argument("--task", required=True)
+    p_init.add_argument("--goal", required=True)
+    p_init.add_argument("--planner", default="(unassigned)")
+    p_init.add_argument("--workspace", default="(current workspace)")
+    p_init.add_argument("--purpose", default=None)
+    for command in ("handoff", "decide"):
+        p = commands.add_parser(command)
+        p.add_argument("--task", required=True)
+        p.add_argument("--by", required=True, help="role/session label, e.g. planner/claude-1")
+        p.add_argument("--msg", required=True, help="single-line entry summary")
+        p.add_argument("--state", choices=STATES, default=None)
+        p.add_argument("--stage", default=None)
+        p.add_argument("--next", dest="next_action", default=None)
+        p.add_argument("--blocker", default=None, help="set blocker text, or '' to clear")
+        if command == "handoff":
+            p.add_argument("--print-prompt", action="store_true", help="include 1-line pickup prompt")
     args = parser.parse_args(argv)
     try:
-        store = Store(args.root, args.timeout)
+        store = Store(resolve_root(args.root), args.timeout)
         if args.command == "snapshot":
             result = store.snapshot(args.target)
         elif args.command == "update":
@@ -328,6 +609,20 @@ def main(argv=None):
             if len(content) > MAX_BYTES:
                 raise CoordinationError("board exceeds 2 MiB limit")
             result = store.update(args.target, args.expected, content.decode("utf-8"))
+        elif args.command == "status":
+            result = store.status()
+            if args.format == "text":
+                print(format_status_text(result))
+                return 0
+        elif args.command == "init-task":
+            result = store.init_task(args.task, args.goal, args.planner, args.workspace, args.purpose)
+        elif args.command in ("handoff", "decide"):
+            result = store.record_entry(
+                args.task, "handoff" if args.command == "handoff" else "decision",
+                args.by, args.msg, state=args.state, next_action=args.next_action,
+                stage=args.stage, blocker=args.blocker,
+                print_prompt=getattr(args, "print_prompt", False),
+            )
         else:
             result = store.change_claim(args.command, args.task, args.session,
                                         getattr(args, "resource", ()), getattr(args, "claim", None),

@@ -8,6 +8,10 @@ another workflow.
   trust/precedence rules, optional `/task` prompt, and reload/verification steps.
 - [antigravity/](antigravity/README.md): Antigravity 1.5.x (`agy` CLI, App, IDE)
   cumulative rules, `.agents/skills/` slash commands, precedence caveats, and reload steps.
+- [codex/](codex/README.md): OpenAI Codex CLI `AGENTS.md` / `AGENTS.override.md`
+  precedence, `.agents/skills/` with `agents/openai.yaml` explicit-invocation policy.
+- [claude-code/](claude-code/README.md): Claude Code v2.1.277+ conditional `AGENTS.md`
+  loading, `.claude/rules/blueberry.md` cumulative fallback, and `.claude/skills/`.
 
 For another harness, inspect its official documentation before deployment.
 Document supported paths, instruction precedence, explicit skill invocation,

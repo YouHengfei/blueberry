@@ -77,6 +77,11 @@ class AssetTests(unittest.TestCase):
         self.assertLessEqual(len(index.splitlines()), 40)
         for role in ("**Planner**", "**Executor**", "**Reviewer (optional)**"):
             self.assertIn(role, index)
+        self.assertIn("core code", index)
+        self.assertIn("harness-agnostic", index)
+        workflow = (GENERAL / "WORKFLOW.md").read_text()
+        self.assertIn("core/complex implementation", workflow)
+        self.assertIn("harness-agnostic", workflow)
         for noise in ("v2", "docs/` or `notes/"):
             self.assertNotIn(noise, index)
 
@@ -136,17 +141,37 @@ class AssetTests(unittest.TestCase):
                          "current-task file", "do not read all task boards"):
             self.assertIn(required, skill)
 
+    def test_codex_and_claude_code_adapter_contracts(self):
+        codex = (ROOT / "toolkit/specific/agent-specific/codex/README.md").read_text()
+        for required in ("AGENTS.md", "AGENTS.override.md", ".agents/skills/<name>/",
+                         "agents/openai.yaml", "allow_implicit_invocation: false",
+                         "project_doc_max_bytes", "$task", "Never blanket-ignore `.agents/`"):
+            self.assertIn(required, codex)
+        for yaml_path in (
+            GENERAL / "skills/local-tests-cleaner/agents/openai.yaml",
+            ROOT / "toolkit/specific/agent-specific/antigravity/skills/task/agents/openai.yaml",
+        ):
+            self.assertIn("allow_implicit_invocation: false", yaml_path.read_text())
+        claude = (ROOT / "toolkit/specific/agent-specific/claude-code/README.md").read_text()
+        for required in ("claude-md-or-agents-md", "CLAUDE.local.md",
+                         ".claude/rules/blueberry.md", ".claude/skills/<name>/",
+                         "disable-model-invocation: true", "ignores `.agents/`",
+                         "Never blanket-ignore `.claude/`"):
+            self.assertIn(required, claude)
+
     def test_unified_install_and_pi_agents_md_alignment(self):
         install = (ROOT / "INSTALL.md").read_text()
-        for required in ("pi/README.md", "antigravity/README.md", "AGENTS.md",
-                         ".agents/skills/<name>/SKILL.md", "<!-- blueberry:router:start -->",
+        for required in ("pi/README.md", "antigravity/README.md",
+                         "codex/README.md", "claude-code/README.md", "AGENTS.md",
+                         ".agents/skills/<name>/", ".claude/skills/<name>/",
+                         "<!-- blueberry:router:start -->",
                          "<!-- blueberry:router:end -->", "AGENTS.override.md",
                          "--path-format=absolute", "snapshot COWORKERS.md",
                          "preserved\n   untracked paths",
                          "## Multi-harness coexistence", "## Setup procedure",
                          "## Update procedure", "## Uninstall procedure",
                          "## Legacy board migration",
-                         "Never blanket-ignore `.coworkers/`, `.agents/` or `.pi/`"):
+                         "Never blanket-ignore `.coworkers/`, `.agents/`, `.pi/` or `.claude/`"):
             self.assertIn(required, install)
         pi_adapter = (ROOT / "toolkit/specific/agent-specific/pi/README.md").read_text()
         for required in ("AGENTS.md", ".agents/skills/<name>/", "AGENTS.override.md",

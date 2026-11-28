@@ -8,32 +8,33 @@ for copy-paste prompts and [toolkit/README.md](toolkit/README.md) for the generi
 ## Core contract
 
 - **Ask first on ambiguity:** if `<blueberry-checkout>`, `<target-repository>` or the
-  intended harness (`pi`, `antigravity`, both, or another harness) is missing or
-  ambiguous, stop and ask. Never install into blueberry itself unless explicitly requested.
+  intended harness (`pi`, `antigravity`, `codex`, `claude-code`, multiple, or another
+  harness) is missing or ambiguous, stop and ask. Never install into blueberry itself
+  unless explicitly requested.
 - **Local copies only:** copy regular files; never create symlinks or follow symlink
   parents/destinations when writing. Installed copies never auto-update on `git pull`.
 - **Preserve-first:** inspect existing project instructions, boards, `.coworkers/`,
-  `.agents/`, `.pi/`, running work, reservations and evidence before changing anything.
-  Unrelated harness settings, extensions, hooks, MCP configs, skills and prompts remain
-  untouched; report collisions instead of removing or overriding them.
+  `.agents/`, `.pi/`, `.claude/`, running work, reservations and evidence before changing
+  anything. Unrelated harness settings, extensions, hooks, MCP configs, skills and prompts
+  remain untouched; report collisions instead of removing or overriding them.
 - **No side-effect execution:** never change user-global configuration (`~/.pi/`,
-  `~/.gemini/`), modify tracked `.gitignore`, start/stop jobs, run cleanup, migrate a
-  live board silently, or commit/push during setup, update or uninstall. Reading or
-  installing a skill never authorizes invoking it.
+  `~/.gemini/`, `~/.codex/`, `~/.claude/`), modify tracked `.gitignore`, start/stop jobs,
+  run cleanup, migrate a live board silently, or commit/push during setup, update or
+  uninstall. Reading or installing a skill never authorizes invoking it.
 
 ## Harness and asset matrix
 
-Pi and Antigravity share the open `AGENTS.md` + `.agents/skills/` workspace layout by
-default, plus the same `COWORKERS.md` and `.coworkers/` coordination root:
+Pi, Antigravity and Codex share `AGENTS.md` + `.agents/skills/` by default; Claude Code
+shares `AGENTS.md` when no `CLAUDE.md` exists (otherwise uses `.claude/rules/blueberry.md`)
+and uses `.claude/skills/`. All harnesses share one `COWORKERS.md` + `.coworkers/` root:
 
-| Capability | Shared default (`pi` & `antigravity`) | Pi (`1.6.x`) specifics | Antigravity (`1.5.x`) specifics | Other / unverified harness |
-|---|---|---|---|---|
-| Adapter notes | [agent-specific/](toolkit/specific/agent-specific/README.md) | [pi/README.md](toolkit/specific/agent-specific/pi/README.md) | [antigravity/README.md](toolkit/specific/agent-specific/antigravity/README.md) | Verify official docs first; never guess |
-| Router (`project.md`) | `AGENTS.md` (marked merge, no frontmatter) | Cumulative; check `AGENTS.override.md` shadowing | Cumulative with `GEMINI.md` & `.agents/rules/*.md` | Merge into verified always-loaded entry point |
-| Zero-tracked-diff fallback | Only if `AGENTS.md` is Git-tracked and user declines editing it | `.pi/APPEND_SYSTEM.md` (check `<agent-dir>` first) | `.agents/rules/blueberry.md` (`trigger: always_on` frontmatter) | Verified untracked project-local rule path |
-| General skills | `.agents/skills/<name>/SKILL.md` | Requires `/trust` (`--approve` headless); hides `disable-model-invocation: true` from startup prompt | Auto-exposed as `/<name>`; check `~/.gemini/antigravity-cli/skills/` & `~/.gemini/skills/` CLI override | Verified explicit skill location |
-| Optional `/task` command | Conversation-local task/role selector | [prompts/task.md](toolkit/specific/agent-specific/pi/prompts/task.md) → `.pi/prompts/task.md` (`/task`) | [skills/task/SKILL.md](toolkit/specific/agent-specific/antigravity/skills/task/SKILL.md) → `.agents/skills/task/SKILL.md` (`/task`) | Optional; natural language works without it |
-| Reload & check | Verify without running cleanup | `/reload`; check startup diagnostics & `/skill:<name>` | Reread per turn; `/skills reload` & `/skills` in `agy`, or **Customizations** in App/IDE | Per official harness documentation |
+| Harness | Adapter | Router (`project.md`) | Zero-tracked-diff fallback | General skills | Optional `/task` | Reload & check |
+|---|---|---|---|---|---|---|
+| **Pi (`1.6.x`)** | [pi/README.md](toolkit/specific/agent-specific/pi/README.md) | `AGENTS.md` (marked merge; check `AGENTS.override.md`) | `.pi/APPEND_SYSTEM.md` (check `<agent-dir>` first) | `.agents/skills/<name>/` (needs `/trust` / `--approve`) | [prompts/task.md](toolkit/specific/agent-specific/pi/prompts/task.md) → `.pi/prompts/task.md` (`/task`) | `/reload`; inspect diagnostics & `/skill:<name>` |
+| **Antigravity (`1.5.x`)** | [antigravity/README.md](toolkit/specific/agent-specific/antigravity/README.md) | `AGENTS.md` (marked merge, no frontmatter) | `.agents/rules/blueberry.md` (`trigger: always_on`) | `.agents/skills/<name>/` (check CLI `~/.gemini/antigravity-cli/skills/`) | [skills/task/](toolkit/specific/agent-specific/antigravity/skills/task/SKILL.md) → `.agents/skills/task/` (`/task`) | `/skills reload` & `/skills` (`agy`) or **Customizations** |
+| **Codex CLI** | [codex/README.md](toolkit/specific/agent-specific/codex/README.md) | `AGENTS.md` (marked merge; `AGENTS.override.md` shadows it) | Warn: `AGENTS.override.md` replaces `AGENTS.md`; ask first | `.agents/skills/<name>/` (include `agents/openai.yaml`) | [skills/task/](toolkit/specific/agent-specific/antigravity/skills/task/SKILL.md) → `.agents/skills/task/` (`$task`) | Fresh session; `/status` & `/skills` |
+| **Claude Code (`v2.1.277+`)** | [claude-code/README.md](toolkit/specific/agent-specific/claude-code/README.md) | `AGENTS.md` (only if no `CLAUDE.md` / `CLAUDE.local.md`), else `.claude/rules/blueberry.md` | `.claude/rules/blueberry.md` (never `CLAUDE.local.md`) | `.claude/skills/<name>/` (ignores `.agents/`) | [skills/task/SKILL.md](toolkit/specific/agent-specific/antigravity/skills/task/SKILL.md) → `.claude/skills/task/SKILL.md` (`/task`) | Fresh session; `/doctor prompt-audit` |
+| **Other** | [agent-specific/](toolkit/specific/agent-specific/README.md) | Verify official docs first | Verified untracked rule path | Verified skill dir | Optional | Per official docs |
 
 ### Marked router block in `AGENTS.md`
 
@@ -49,18 +50,23 @@ uninstalls can locate blueberry's section without disturbing project rules:
 
 ## Multi-harness coexistence
 
-When a repository is used with both Pi and Antigravity (or adds a second harness later):
+When a repository uses several harnesses (`pi`, `antigravity`, `codex`, `claude-code`):
 
 1. **One coordination store:** share one `COWORKERS.md` and `.coworkers/` canonical root.
-2. **One router load per harness:** keep the marked router block in `AGENTS.md` once.
-   Never install both `AGENTS.md` and `.pi/APPEND_SYSTEM.md` or `.agents/rules/blueberry.md`
-   at the same time, and reuse an existing `GEMINI.md` / `CLAUDE.md` router instead of
-   introducing a second board-discovery prompt.
-3. **One shared skill directory:** install selected general skills (`local-tests-cleaner`)
-   once in `.agents/skills/<name>/`; do not duplicate them into `.pi/skills/<name>/`.
-4. **Non-colliding `/task` helpers:** `.pi/prompts/task.md` (`/task` in Pi) and
-   `.agents/skills/task/SKILL.md` (`/task` in Antigravity, `/skill:task` in Pi with zero
-   startup prompt overhead) may both be installed when both harnesses are requested.
+   Roles are harness-agnostic—any harness may act as Planner, Executor or Reviewer.
+2. **One router load per harness:** keep the marked router block in `AGENTS.md` once when
+   all active harnesses read it. Never install both `AGENTS.md` and a fallback for the
+   same harness (`.pi/APPEND_SYSTEM.md`, `.agents/rules/blueberry.md`, or
+   `.claude/rules/blueberry.md`). If `CLAUDE.md` exists, add `.claude/rules/blueberry.md`
+   for Claude Code without duplicating into `AGENTS.md`.
+3. **Shared vs. Claude skills:** install general skills once in `.agents/skills/<name>/`
+   (including `agents/openai.yaml`) for Pi + Antigravity + Codex (never duplicate into
+   `.pi/skills/`); copy separately to `.claude/skills/<name>/` only when Claude Code is
+   installed (since Claude Code ignores `.agents/`).
+4. **Non-colliding `/task` helpers:** `.pi/prompts/task.md` (`/task` in Pi),
+   `.agents/skills/task/` (`/task` in Antigravity, `$task` in Codex, `/skill:task` in Pi
+   with zero startup overhead), and `.claude/skills/task/SKILL.md` (`/task` in Claude Code)
+   coexist cleanly.
 
 ## Setup procedure
 
@@ -122,13 +128,15 @@ to create, merge or preserve:
   - Local-only harness assets (only for untracked paths installed for local use):
     `/AGENTS.md` (only when newly created for local-only use),
     `/.agents/skills/local-tests-cleaner/`, `/.agents/skills/task/`,
-    `/.pi/prompts/task.md`, or an approved fallback router (`/.pi/APPEND_SYSTEM.md`,
-    `/.agents/rules/blueberry.md`).
-  - **Never blanket-ignore `.coworkers/`, `.agents/` or `.pi/`:** `.coworkers/tasks/`
-    must remain versionable for explicit local commits, and `.agents/` or `.pi/` may hold
-    tracked team configs. Report broader existing ignore rules or tracked coordination
-    files as conflicts; never run `git rm` or modify tracked `.gitignore`. Without Git,
-    report that exclusion/versioning is unavailable without initializing a repository.
+    `/.pi/prompts/task.md`, `/.claude/skills/local-tests-cleaner/`,
+    `/.claude/skills/task/`, or an approved fallback router (`/.pi/APPEND_SYSTEM.md`,
+    `/.agents/rules/blueberry.md`, `/.claude/rules/blueberry.md`).
+  - **Never blanket-ignore `.coworkers/`, `.agents/`, `.pi/` or `.claude/`:**
+    `.coworkers/tasks/` must remain versionable for explicit local commits, and harness
+    directories may hold tracked team configs. Report broader existing ignore rules or
+    tracked coordination files as conflicts; never run `git rm` or modify tracked
+    `.gitignore`. Without Git, report that exclusion/versioning is unavailable without
+    initializing a repository.
 
 ### 4. Verify and report
 

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Select Task"
+  short_description: "Explicitly bind this conversation to a task and role from COWORKERS.md."
+policy:
+  allow_implicit_invocation: false

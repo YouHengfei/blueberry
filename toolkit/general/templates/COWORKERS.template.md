@@ -15,13 +15,12 @@ An index, not a global current task.
 
 ## Roles
 
-- **Planner** — scope, executable plan, acceptance checks before handoff; reviews tests/diff and accepts or replans.
-- **Executor** — implements and verifies within scope; owns its jobs and scratch.
-- **Reviewer (optional)** — independent check of risky changes or disputed evidence.
+- **Planner** — scope, design, core code when appropriate, executable plan, acceptance checks before handoff; reviews and accepts or replans.
+- **Executor** — delegated bounded slices, test/benchmark runs and verification in scope; owns its jobs and scratch.
+- **Reviewer (optional)** — independent audit of risky diffs, core code or disputed evidence.
 
-Roles attach to tasks; one session may fill several. Task state lives at
-`.coworkers/state/tasks/<task_id>.md`; durable records live in the task workspace at
-`.coworkers/tasks/<task_id>/`.
+Roles are harness-agnostic and attach to tasks; one session may fill several. Task state
+lives at `.coworkers/state/tasks/<task_id>.md`; durable records live at `.coworkers/tasks/<task_id>/`.
 
 ## Active task index
 

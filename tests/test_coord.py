@@ -380,6 +380,92 @@ class CoordinationTests(unittest.TestCase):
         release = self.cli("release", "--task", "task_a", "--session", "cli", "--claim", claim_id)
         self.assertEqual(release.returncode, 0, release.stderr)
 
+    def test_init_task_status_handoff_and_decide_round_trip(self):
+        coworkers = (ROOT / "toolkit/general/templates/COWORKERS.template.md").read_text()
+        self.store.update("COWORKERS.md", "missing", coworkers)
+        init = self.cli("init-task", "--task", "multi_agent_bus",
+                        "--goal", "Verify ergonomic commands", "--planner", "planner/claude-1")
+        self.assertEqual(init.returncode, 0, init.stderr)
+        payload = json.loads(init.stdout)
+        self.assertTrue(payload["record_created"])
+        self.assertTrue((self.root / ".coworkers/tasks/multi_agent_bus/README.md").is_file())
+        self.assertIn("| multi_agent_bus |", self.store.snapshot("COWORKERS.md")["content"])
+        # Duplicate init-task fails closed with stale/conflict exit 3.
+        dup = self.cli("init-task", "--task", "multi_agent_bus", "--goal", "Duplicate")
+        self.assertEqual(dup.returncode, 3)
+
+        ho = self.cli("handoff", "--task", "multi_agent_bus", "--by", "planner/claude-1",
+                      "--state", "running", "--stage", "01_core",
+                      "--next", "executor/codex-1 — run regression suite",
+                      "--blocker", "waiting on GPU 0", "--msg", "core code ready", "--print-prompt")
+        self.assertEqual(ho.returncode, 0, ho.stderr)
+        ho_data = json.loads(ho.stdout)
+        self.assertEqual(ho_data["state"], "running")
+        self.assertIn("multi_agent_bus", ho_data["pickup_prompt"])
+
+        dec = self.cli("decide", "--task", "multi_agent_bus", "--by", "executor/codex-1",
+                       "--blocker", "", "--msg", "keep stdlib only; no deps; tests pass")
+        self.assertEqual(dec.returncode, 0, dec.stderr)
+
+        st_json = self.cli("status")
+        self.assertEqual(st_json.returncode, 0, st_json.stderr)
+        status = json.loads(st_json.stdout)
+        row = next(t for t in status["tasks"] if t["task"] == "multi_agent_bus")
+        self.assertEqual(row["state"], "running")
+        self.assertEqual(row["stage"], "01_core")
+        self.assertEqual(row["blocked"], "")
+        st_text = self.cli("status", "--format", "text")
+        self.assertEqual(st_text.returncode, 0, st_text.stderr)
+        self.assertIn("multi_agent_bus [running]", st_text.stdout)
+
+    def test_concurrent_handoffs_and_decisions_both_preserved(self):
+        coworkers = (ROOT / "toolkit/general/templates/COWORKERS.template.md").read_text()
+        self.store.update("COWORKERS.md", "missing", coworkers)
+        self.store.init_task("parallel_ho", "Concurrent append check", "planner/agy-1")
+        board = ".coworkers/state/tasks/parallel_ho.md"
+        procs = []
+        with self.store.lock(board):
+            procs.append(subprocess.Popen(
+                [sys.executable, str(HELPER), "--root", str(self.root), "handoff",
+                 "--task", "parallel_ho", "--by", "executor/codex-1", "--msg", "worker one finished"],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True))
+            procs.append(subprocess.Popen(
+                [sys.executable, str(HELPER), "--root", str(self.root), "decide",
+                 "--task", "parallel_ho", "--by", "reviewer/pi-1", "--msg", "approved diff"],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True))
+            time.sleep(0.1)
+        for p in procs:
+            _, err = p.communicate(timeout=10)
+            self.assertEqual(p.returncode, 0, err)
+        content = self.store.snapshot(board)["content"]
+        self.assertIn("executor/codex-1 — worker one finished", content)
+        self.assertIn("reviewer/pi-1 — approved diff", content)
+
+    def test_auto_root_resolves_from_regular_and_linked_git_worktrees(self):
+        import shutil
+        if not shutil.which("git"):
+            self.skipTest("git not available")
+        repo = self.root / "gitrepo"
+        wt = self.root / "gitwt"
+        repo.mkdir()
+        env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+        env.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull)
+        git = lambda cwd, *a: subprocess.run(
+            ["git", "-c", "user.name=T", "-c", "user.email=t@invalid",
+             "-c", "commit.gpgSign=false", *a],
+            cwd=cwd, env=env, text=True, capture_output=True, check=True, timeout=15)
+        git(repo, "init", "-q", "--template=")
+        (repo / "f.txt").write_text("x\n")
+        git(repo, "add", "f.txt")
+        git(repo, "commit", "-qm", "init")
+        git(repo, "worktree", "add", "-qb", "task/auto", str(wt))
+        coord.Store(repo).update(coord.SHARED, "missing", self.shared)
+        for cwd in (repo, wt):
+            proc = subprocess.run([sys.executable, str(HELPER), "status"],
+                                  cwd=cwd, env=env, text=True, capture_output=True, timeout=10)
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            self.assertEqual(json.loads(proc.stdout)["root"], str(repo.resolve()))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Local Tests Cleaner"
+  short_description: "Explicit task-scoped scratch cleanup and bottom-latest board compaction."
+policy:
+  allow_implicit_invocation: false

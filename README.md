@@ -67,14 +67,17 @@ the task worktree, whose actual path is recorded in its state board.
 
 ## Supported harnesses
 
-Pi and Antigravity share `AGENTS.md` and `.agents/skills/`, so single- or dual-harness
-repositories avoid duplicate routers and duplicate skills. Full rules and lifecycle steps
-live in [INSTALL.md](INSTALL.md) and [harness notes](toolkit/specific/agent-specific/README.md):
+Pi, Antigravity and Codex share `AGENTS.md` and `.agents/skills/`; Claude Code shares
+`AGENTS.md` when no `CLAUDE.md` exists (otherwise uses `.claude/rules/blueberry.md`) and
+uses `.claude/skills/`. Full rules and lifecycle steps live in [INSTALL.md](INSTALL.md)
+and [harness notes](toolkit/specific/agent-specific/README.md):
 
 | Harness | Router entry point | Skills | Optional `/task` | Adapter |
 |---|---|---|---|---|
 | **Pi (`1.6.x`)** | `AGENTS.md` (marked merge) | `.agents/skills/<name>/` | `.pi/prompts/task.md` (`/task`) | [pi/README.md](toolkit/specific/agent-specific/pi/README.md) |
-| **Antigravity (`1.5.x`)** | `AGENTS.md` (marked merge) | `.agents/skills/<name>/` | `.agents/skills/task/SKILL.md` (`/task`) | [antigravity/README.md](toolkit/specific/agent-specific/antigravity/README.md) |
+| **Antigravity (`1.5.x`)** | `AGENTS.md` (marked merge) | `.agents/skills/<name>/` | `.agents/skills/task/` (`/task`) | [antigravity/README.md](toolkit/specific/agent-specific/antigravity/README.md) |
+| **Codex CLI** | `AGENTS.md` (marked merge) | `.agents/skills/<name>/` (`openai.yaml`) | `.agents/skills/task/` (`$task`) | [codex/README.md](toolkit/specific/agent-specific/codex/README.md) |
+| **Claude Code (`v2.1.277+`)** | `AGENTS.md` or `.claude/rules/blueberry.md` | `.claude/skills/<name>/` | `.claude/skills/task/SKILL.md` (`/task`) | [claude-code/README.md](toolkit/specific/agent-specific/claude-code/README.md) |
 | **Other harnesses** | Verify official docs first | Verify explicit discovery | Optional | [agent-specific/README.md](toolkit/specific/agent-specific/README.md) |
 
 ## User guide
@@ -93,10 +96,13 @@ Start with the [workflow guide](toolkit/general/WORKFLOW.md). Typical requests:
 | Clean | Explicit task-scoped cleaner; project-wide only on a separate explicit request. |
 | Publish | Preserve local history, prepare coherent reviewed commits, validate, then ask before push. |
 
-Planner accepts/replans; Executor delivers evidence and owns its jobs; Reviewer is
-optional. One person/session may fill several roles. Several Executors need distinct
-work items. At meaningful request boundaries reconcile state and next action; do not
-write no-op logs or rewrite the plan just because a message ended.
+Planner owns scope, design, core/complex implementation when appropriate, and acceptance
+verdicts; Executor handles delegated bounded slices, test/benchmark runs, evidence and its
+jobs; Reviewer is optional (especially useful when Planner wrote core code). Roles are
+harness-agnostic—any agent or human may fill any role, and one session may fill several.
+Several Executors need distinct work items. At meaningful request boundaries reconcile
+state and next action; do not write no-op logs or rewrite the plan just because a message
+ended.
 
 The [coordination helper guide](toolkit/general/tools/README.md) covers revision-checked
 updates, claims, contention and recovery. It is cooperative, local-POSIX coordination,
@@ -106,11 +112,11 @@ not a security boundary or a replacement for live availability checks.
 
 ```text
 Read <blueberry-checkout>/INSTALL.md and follow its Setup procedure.
-Set up blueberry in <target-repository> for the current agent harness (or specify pi / antigravity / both).
+Set up blueberry in <target-repository> for the current agent harness (or specify pi / antigravity / codex / claude-code).
 If either path or the target harness is missing or ambiguous, ask first; never guess or proceed.
 Preserve existing instructions, boards, running work, reservations and evidence,
-including unrelated harness resources in AGENTS.md, .agents/ and .pi/.
-Ask before editing a Git-tracked AGENTS.md, resolving conflicts, creating tasks or migrating.
+including unrelated harness resources in AGENTS.md, CLAUDE.md, .agents/, .pi/ and .claude/.
+Ask before editing a Git-tracked AGENTS.md or CLAUDE.md, resolving conflicts, creating tasks or migrating.
 Use local copies, not symlinks. Do not change global settings, run workloads/cleanup, or commit/push.
 Validate, report created/preserved/skipped items, and explain reload requirements.
 ```
