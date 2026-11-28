@@ -82,6 +82,8 @@ class AssetTests(unittest.TestCase):
         workflow = (GENERAL / "WORKFLOW.md").read_text()
         self.assertIn("core/complex implementation", workflow)
         self.assertIn("harness-agnostic", workflow)
+        self.assertIn("Stay in the current checkout by default", workflow)
+        self.assertIn("editable `.venv`", workflow)
         for noise in ("v2", "docs/` or `notes/"):
             self.assertNotIn(noise, index)
 
