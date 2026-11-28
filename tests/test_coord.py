@@ -466,6 +466,53 @@ class CoordinationTests(unittest.TestCase):
             self.assertEqual(proc.returncode, 0, proc.stderr)
             self.assertEqual(json.loads(proc.stdout)["root"], str(repo.resolve()))
 
+    def test_close_task_guards_claims_and_record_then_closes_cleanly(self):
+        coworkers = (ROOT / "toolkit/general/templates/COWORKERS.template.md").read_text()
+        self.store.update("COWORKERS.md", "missing", coworkers)
+        self.store.init_task("close_me", "End-to-end closure test", "planner/agy-1")
+        self.store.init_task("keep_me", "Sibling task stays indexed", "planner/agy-1")
+        claim_id = self.claim(("host/node0/device/0",), task="close_me", session="exec-1")["claim"]
+
+        # Refuses to close while active claims remain (exit 3), preserving board & index.
+        blocked = self.cli("close-task", "--task", "close_me", "--by", "planner/agy-1",
+                           "--verdict", "tests green")
+        self.assertEqual(blocked.returncode, 3, blocked.stderr)
+        self.assertIn("| close_me |", self.store.snapshot("COWORKERS.md")["content"])
+
+        # Release claim, remove durable record -> fails closed (exit 2).
+        self.store.change_claim("release", "close_me", "exec-1", claim_id=claim_id)
+        rec = self.root / ".coworkers/tasks/close_me/README.md"
+        rec_text = rec.read_text()
+        rec.unlink()
+        missing_rec = self.cli("close-task", "--task", "close_me", "--by", "planner/agy-1",
+                               "--verdict", "tests green")
+        self.assertEqual(missing_rec.returncode, 2, missing_rec.stderr)
+
+        # Support linked-worktree --record path.
+        wt_rec = self.root / "wt/.coworkers/tasks/close_me/README.md"
+        wt_rec.parent.mkdir(parents=True)
+        wt_rec.write_text(rec_text)
+        closed = self.cli("close-task", "--task", "close_me", "--by", "planner/agy-1",
+                          "--verdict", "52/52 tests pass", "--disposition", "scratch deleted",
+                          "--record", str(wt_rec))
+        self.assertEqual(closed.returncode, 0, closed.stderr)
+        data = json.loads(closed.stdout)
+        self.assertEqual(data["outcome"], "done")
+        self.assertTrue(data["index_removed"])
+        board_text = self.store.snapshot(".coworkers/state/tasks/close_me.md")["content"]
+        self.assertIn("- State: done", board_text)
+        self.assertIn("closed (done): 52/52 tests pass", board_text)
+        self.assertIn("scratch deleted", board_text)
+        index_text = self.store.snapshot("COWORKERS.md")["content"]
+        self.assertNotIn("| close_me |", index_text)
+        self.assertIn("| keep_me |", index_text)
+
+        # Cancelled outcome also works cleanly.
+        canc = self.cli("close-task", "--task", "keep_me", "--by", "planner/agy-1",
+                        "--outcome", "cancelled", "--verdict", "superseded by design change")
+        self.assertEqual(canc.returncode, 0, canc.stderr)
+        self.assertIn("- State: cancelled", self.store.snapshot(".coworkers/state/tasks/keep_me.md")["content"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -68,6 +68,24 @@ When a repository uses several harnesses (`pi`, `antigravity`, `codex`, `claude-
    with zero startup overhead), and `.claude/skills/task/SKILL.md` (`/task` in Claude Code)
    coexist cleanly.
 
+## Linked worktrees
+
+Git's common `.git/info/exclude` is shared across linked worktrees and `coord.py`
+automatically resolves the canonical main repo root via `--git-common-dir`, **but local
+git-excluded files in the main checkout do not appear inside a newly created `task/<id>`
+worktree**. When launching an agent directly inside a linked worktree:
+
+1. **Never create a second `.coworkers/state/` copy** in the worktree; run
+   `<main-repo>/.coworkers/tools/coord.py` (or copy `.coworkers/tools/` locally—its
+   auto-root still targets `<main-repo>`).
+2. **Copy only the local router/skills needed for that worktree's harness** (regular local
+   copies, e.g. `.agents/rules/blueberry.md`, `.pi/APPEND_SYSTEM.md`,
+   `.claude/rules/blueberry.md`, and selected skills; already ignored by the shared
+   `info/exclude` block).
+3. **Optional pointer `COWORKERS.md`:** if agents start in the worktree, place a tiny
+   local pointer `COWORKERS.md` naming the canonical `<main-repo>` root and workspace
+   record path—never an independent active task index.
+
 ## Setup procedure
 
 ### 1. Inspect

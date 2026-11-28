@@ -116,6 +116,7 @@ class AssetTests(unittest.TestCase):
         prompt = (ROOT / "toolkit/specific/agent-specific/pi/prompts/task.md").read_text()
         self.assertIn("${1:-unspecified}", prompt)
         self.assertIn("${2:-unspecified}", prompt)
+        self.assertIn("coord.py status --format text", prompt)
         self.assertIn("only this conversation", prompt)
         self.assertIn("discussion-only", prompt)
         package = json.loads((ROOT / "package.json").read_text())
@@ -137,8 +138,8 @@ class AssetTests(unittest.TestCase):
         self.assertIn(f"name: {skill_path.parent.name}\n", metadata)
         self.assertIn("description:", metadata)
         self.assertIn("disable-model-invocation: true", metadata)
-        for required in ("only this conversation", "discussion-only",
-                         "current-task file", "do not read all task boards"):
+        for required in ("coord.py status --format text", "only this conversation",
+                         "discussion-only", "current-task file", "do not read all task boards"):
             self.assertIn(required, skill)
 
     def test_codex_and_claude_code_adapter_contracts(self):
@@ -168,7 +169,8 @@ class AssetTests(unittest.TestCase):
                          "<!-- blueberry:router:end -->", "AGENTS.override.md",
                          "--path-format=absolute", "snapshot COWORKERS.md",
                          "preserved\n   untracked paths",
-                         "## Multi-harness coexistence", "## Setup procedure",
+                         "## Multi-harness coexistence", "## Linked worktrees",
+                         "## Setup procedure",
                          "## Update procedure", "## Uninstall procedure",
                          "## Legacy board migration",
                          "Never blanket-ignore `.coworkers/`, `.agents/`, `.pi/` or `.claude/`"):

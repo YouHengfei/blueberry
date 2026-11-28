@@ -201,6 +201,19 @@ def _append_index_row(text, row):
     return "\n".join(lines) + ("\n" if text.endswith("\n") else "")
 
 
+def _remove_index_row(text, task):
+    lines = text.splitlines()
+    start, end = _section_bounds(lines, "## Active task index")
+    removed = False
+    kept = []
+    for idx, line in enumerate(lines):
+        if start < idx < end and line.lstrip().startswith("|") and f"| {task} |" in line:
+            removed = True
+            continue
+        kept.append(line)
+    return "\n".join(kept) + ("\n" if text.endswith("\n") else ""), removed
+
+
 def _render_task_board(task, goal, planner, workspace):
     return (
         f"# Task: {task}\n\n"
@@ -543,6 +556,68 @@ class Store:
             )
         return out
 
+    def close_task(self, task, actor, verdict, outcome="done", disposition=None, record=None):
+        """Close a task atomically after verifying no active claims and durable README exists."""
+        check_task(task)
+        cell(actor)
+        cell(verdict)
+        if outcome not in ("done", "cancelled"):
+            raise CoordinationError("outcome must be done or cancelled")
+        if disposition is not None:
+            cell(disposition)
+        record_rel = f".coworkers/tasks/{task}/README.md"
+        if record is None:
+            record_path = self.safe_path(record_rel)
+            if not record_path.is_file():
+                raise CoordinationError(
+                    f"durable task record {record_rel} missing; pass --record <worktree-path> or record outcome first"
+                )
+        else:
+            record_path = Path(record).expanduser().absolute()
+            if record_path.is_symlink() or not record_path.is_file() or not record_path.as_posix().endswith(f"/{record_rel}"):
+                raise CoordinationError(f"--record must point to an existing regular {record_rel} file")
+        with self.lock(SHARED):
+            shared = self.read(SHARED)
+            if shared is not None:
+                active = [c for c in parse_claims(shared.decode()) if c["task"] == task]
+                if active:
+                    raise CoordinationError(
+                        f"task {task} still holds {len(active)} active claim(s); stop jobs and release first", 3
+                    )
+        board = f".coworkers/state/tasks/{task}.md"
+        entry = f"- {datetime.now().strftime('%Y-%m-%d %H:%M')} {actor} — closed ({outcome}): {verdict}"
+        with self.lock(board):
+            previous = self.read(board)
+            if previous is None:
+                raise CoordinationError("task state board missing")
+            lines = previous.decode().splitlines()
+            cs_start, cs_end = _section_bounds(lines, "## Current state")
+            cs_end = _update_section_field(lines, cs_start, cs_end, "State", outcome)
+            cs_end = _update_section_field(lines, cs_start, cs_end, "Next", f"closed ({outcome})")
+            _update_section_field(lines, cs_start, cs_end, "Blocked by / Unblock", "")
+            if any(line.strip() == "## Closure" for line in lines):
+                cl_start, cl_end = _section_bounds(lines, "## Closure")
+                cl_end = _update_section_field(lines, cl_start, cl_end, "Acceptance / exceptions", verdict)
+                if disposition is not None:
+                    cl_end = _update_section_field(
+                        lines, cl_start, cl_end, "Task README & cleanup disposition", disposition
+                    )
+                _update_section_field(
+                    lines, cl_start, cl_end, "Owned jobs stopped & claims released", "verified none active"
+                )
+            _append_section_line(lines, "## Handoffs", entry)
+            encoded = ("\n".join(lines) + "\n").encode("utf-8")
+            self.replace(board, encoded)
+        index_removed = False
+        with self.lock("COWORKERS.md"):
+            raw = self.read("COWORKERS.md")
+            if raw is not None:
+                updated, index_removed = _remove_index_row(raw.decode(), task)
+                if index_removed:
+                    self.replace("COWORKERS.md", updated.encode("utf-8"))
+        return {"task": task, "outcome": outcome, "revision": revision(encoded),
+                "index_removed": index_removed, "entry": entry}
+
 
 def format_status_text(data):
     lines = [f"Root: {data['root']}", "Tasks:"]
@@ -599,6 +674,13 @@ def main(argv=None):
         p.add_argument("--blocker", default=None, help="set blocker text, or '' to clear")
         if command == "handoff":
             p.add_argument("--print-prompt", action="store_true", help="include 1-line pickup prompt")
+    p_close = commands.add_parser("close-task")
+    p_close.add_argument("--task", required=True)
+    p_close.add_argument("--by", required=True, help="role/session label recording closure")
+    p_close.add_argument("--verdict", required=True, help="acceptance verdict or cancellation summary")
+    p_close.add_argument("--outcome", choices=("done", "cancelled"), default="done")
+    p_close.add_argument("--disposition", default=None, help="keep/promote/delete/defer summary")
+    p_close.add_argument("--record", default=None, help="durable README path when living in a linked worktree")
     args = parser.parse_args(argv)
     try:
         store = Store(resolve_root(args.root), args.timeout)
@@ -616,6 +698,8 @@ def main(argv=None):
                 return 0
         elif args.command == "init-task":
             result = store.init_task(args.task, args.goal, args.planner, args.workspace, args.purpose)
+        elif args.command == "close-task":
+            result = store.close_task(args.task, args.by, args.verdict, args.outcome, args.disposition, args.record)
         elif args.command in ("handoff", "decide"):
             result = store.record_entry(
                 args.task, "handoff" if args.command == "handoff" else "decision",
