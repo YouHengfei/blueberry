@@ -9,9 +9,10 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 The context-footprint measurement harness lives in
 [experiments/context-footprint](../experiments/context-footprint/README.md): Tier A
 (scripted mock model, zero cost, against the real Pi binary using workspace `AGENTS.md`
-and `.agents/skills/`) is runnable and passing;
-Tier B (real models) requires explicit spending authorization. The matrix below is the
-full scenario set; Tier A mechanically covers the assembly rows, not model judgment.
+and `.agents/skills/`) is runnable and passing; Tier B (`run_tier_b.py`, real models via
+explicit `--confirm-spend` plus zero-cost `pi-mock` E2E verification) is implemented and
+offline-tested in [test_tier_b.py](test_tier_b.py). The matrix below is the full scenario
+set; Tier A covers assembly and Tier B covers model behavior.
 
 No third-party test dependency, model API, device, container, real workload, live
 project board or retained artifact is needed. Writes are confined to automatically

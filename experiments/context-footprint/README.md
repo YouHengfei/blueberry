@@ -5,7 +5,7 @@ Measures what blueberry actually puts into model context, in two tiers:
 | Tier | Question | Model | Cost | Status |
 |---|---|---|---|---|
 | **A (mechanical)** | What does the harness *assemble* into each request? | Scripted mock provider | Zero | **Runnable now, all scenarios pass** |
-| **B (behavioral)** | Does a real model *choose* the right file / ask correctly? | Real provider | API spend | Designed; requires explicit authorization |
+| **B (behavioral)** | Does a real model *choose* the right file / ask / use `coord.py`? | Real provider (`--confirm-spend`) or `pi-mock` dry run | Explicit opt-in | **Runnable now (`run_tier_b.py`); `pi-mock` E2E verified** |
 
 Tier A passing means the harness assembles minimal, correctly scoped payloads and the
 always-loaded overhead stays in budget. It says nothing about model judgment.
@@ -43,14 +43,26 @@ Markers are fixed strings defined in `fixtures.py` (`FX_*_M1`), embedded once pe
 with benign filler for realistic payload sizes. The grader searches the captured request
 bodies for expected/forbidden markers — this is why Tier A cannot lie about assembly.
 
-## Tier B (planned, not authorized)
+## Tier B (behavioral, explicit spend opt-in)
 
-Same fixture and scenario prompts, but `--provider/--model` point at a real provider and
-turns are model-generated. Needs: explicit spending consent, a response-capture log,
-behavioral graders (correct file selection, ask-instead-of-guess on ambiguity, no
-unrequested reads), repeat runs for stochasticity, and a readable report stored in the
-owning task record with transient captures in namespaced scratch. Do not run it as a
-side effect of other work; record the model, revision, date and per-scenario outcomes.
+`run_tier_b.py` evaluates real model behavior across 6 deterministic scenarios (`general_no_task`,
+`ambiguous_asks_first`, `task_isolation_alpha`, `coord_cli_not_raw_edit`, `casual_cleanup_trap`,
+and `no_weaken_acceptance`) by parsing headless JSONL event streams (`pi --mode json`,
+`agy --output-format stream-json`, `claude --output-format stream-json`, `codex exec --json`)
+and grading both normalized tool traces and post-run filesystem state in disposable `/tmp` Git repos.
+
+```bash
+# Zero-cost end-to-end verification of the Tier B runner and graders against local `pi`:
+python3 experiments/context-footprint/run_tier_b.py --harness pi-mock
+
+# Live behavioral run (requires explicit --confirm-spend; supports --repeat N):
+python3 experiments/context-footprint/run_tier_b.py \
+  --harness agy --scenario casual_cleanup_trap --repeat 3 --confirm-spend
+```
+
+Live runs refuse to execute without `--confirm-spend`. For headless shell actions inside
+disposable `/tmp` repos under `agy`, pass `--auto-approve-tools` only when appropriate.
+Record the model, harness version, blueberry revision, date, and per-scenario pass rates.
 
 ## Other harnesses
 

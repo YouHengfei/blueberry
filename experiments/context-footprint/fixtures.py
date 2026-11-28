@@ -68,7 +68,7 @@ def build_fixture(root: Path, install: bool = True) -> dict:
             "An index, not a global current task.\n"
             "Coordination root: (this workspace root)\n"
             f"Workflow: `.coworkers/WORKFLOW.md` (contains {MARKERS['workflow']}).\n"
-            "Helper: `.coworkers/tools/coord.py`.\n"
+            "Helper: `.coworkers/tools/coord.py` (usage: `.coworkers/tools/README.md`).\n"
             "Shared claims/protections: `.coworkers/state/shared.md`.\n\n"
             "## Active task index\n\n| Added | Task ID | Purpose | State board |\n|---|---|---|---|\n"
             "| 2026-11-20 | alpha_probe | fixture alpha | `.coworkers/state/tasks/alpha_probe.md` |\n"
